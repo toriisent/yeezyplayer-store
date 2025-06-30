@@ -2,10 +2,10 @@
 import React from 'react';
 import { useMusic } from '../contexts/MusicContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Music, Heart, Calendar } from 'lucide-react';
+import { BarChart, Music, Calendar } from 'lucide-react';
 
 const Stats: React.FC = () => {
-  const { releases, likedSongs } = useMusic();
+  const { releases } = useMusic();
   
   const totalTracks = releases.reduce((total, release) => total + release.tracks.length, 0);
   const totalDuration = releases.reduce((total, release) => 
@@ -33,7 +33,7 @@ const Stats: React.FC = () => {
           <p className="text-gray-400">Overview of your music collection</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="bg-gray-900/50 border-gray-700 animate-fade-in">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Total Releases</CardTitle>
@@ -56,16 +56,6 @@ const Stats: React.FC = () => {
 
           <Card className="bg-gray-900/50 border-gray-700 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Liked Songs</CardTitle>
-              <Heart className="h-4 w-4 text-red-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{likedSongs.length}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900/50 border-gray-700 animate-fade-in" style={{ animationDelay: '300ms' }}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Total Duration</CardTitle>
               <Calendar className="h-4 w-4 text-gray-400" />
             </CardHeader>
@@ -75,7 +65,7 @@ const Stats: React.FC = () => {
           </Card>
         </div>
 
-        <Card className="bg-gray-900/50 border-gray-700 animate-fade-in" style={{ animationDelay: '400ms' }}>
+        <Card className="bg-gray-900/50 border-gray-700 animate-fade-in" style={{ animationDelay: '300ms' }}>
           <CardHeader>
             <CardTitle className="text-white">Release Types</CardTitle>
           </CardHeader>

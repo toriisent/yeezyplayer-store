@@ -5,36 +5,10 @@ import { useMusic } from '../contexts/MusicContext';
 
 const Index: React.FC = () => {
   const { releases } = useMusic();
-  const featuredReleases = releases.filter(release => release.isFeatured);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-8 animate-fade-in">
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* Hero Section - Simplified */}
-        <section className="text-center py-16 animate-scale-in">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl font-bold mb-8 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent animate-shimmer">
-              Music Collection
-            </h1>
-            <div className="flex justify-center gap-8 text-white animate-fade-in" style={{ animationDelay: '200ms' }}>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">{releases.length}</div>
-                <div className="text-sm text-gray-300">Releases</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">
-                  {releases.reduce((total, release) => total + release.tracks.length, 0)}
-                </div>
-                <div className="text-sm text-gray-300">Tracks</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">{featuredReleases.length}</div>
-                <div className="text-sm text-gray-300">Featured</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* All Releases */}
         {releases.length > 0 && (
           <section className="animate-slide-in-right">
