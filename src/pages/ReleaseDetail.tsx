@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMusic } from '../contexts/MusicContext';
 import { TrackList } from '../components/TrackList';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Play, Pause } from 'lucide-react';
 
 const ReleaseDetail = () => {
@@ -152,9 +154,11 @@ const ReleaseDetail = () => {
           </div>
         </div>
 
-        {/* Track List */}
-        <div className="bg-black/30 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-          <TrackList tracks={release.tracks} />
+        {/* Track List with Scroll Area */}
+        <div className="bg-black/30 backdrop-blur-sm rounded-lg border border-white/10 overflow-hidden">
+          <ScrollArea className="h-[60vh] p-6">
+            <TrackList tracks={release.tracks} />
+          </ScrollArea>
         </div>
       </div>
     </div>
