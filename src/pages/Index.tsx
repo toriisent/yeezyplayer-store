@@ -4,7 +4,18 @@ import { ReleaseCard } from '../components/ReleaseCard';
 import { useMusic } from '../contexts/MusicContext';
 
 const Index: React.FC = () => {
-  const { releases } = useMusic();
+  const { releases, loading } = useMusic();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading music...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter releases by type
   const albums = releases.filter(release => release.type === 'album');

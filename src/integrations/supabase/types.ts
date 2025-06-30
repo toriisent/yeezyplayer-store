@@ -9,7 +9,182 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      liked_songs: {
+        Row: {
+          created_at: string
+          id: string
+          track_id: string
+          user_session: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          track_id: string
+          user_session: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          track_id?: string
+          user_session?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liked_songs_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lyric_words: {
+        Row: {
+          end_time: number
+          id: string
+          lyric_id: string
+          start_time: number
+          word: string
+          word_order: number
+        }
+        Insert: {
+          end_time: number
+          id?: string
+          lyric_id: string
+          start_time: number
+          word: string
+          word_order: number
+        }
+        Update: {
+          end_time?: number
+          id?: string
+          lyric_id?: string
+          start_time?: number
+          word?: string
+          word_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lyric_words_lyric_id_fkey"
+            columns: ["lyric_id"]
+            isOneToOne: false
+            referencedRelation: "lyrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lyrics: {
+        Row: {
+          created_at: string
+          id: string
+          line_order: number
+          line_time: number
+          track_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_order: number
+          line_time: number
+          track_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_order?: number
+          line_time?: number
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lyrics_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      releases: {
+        Row: {
+          cover_url: string
+          created_at: string
+          id: string
+          is_featured: boolean
+          release_date: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          cover_url: string
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          release_date: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          cover_url?: string
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          release_date?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tracks: {
+        Row: {
+          artist: string
+          audio_url: string
+          cover_url: string
+          created_at: string
+          duration: number
+          id: string
+          release_id: string
+          title: string
+          track_order: number
+          updated_at: string
+        }
+        Insert: {
+          artist: string
+          audio_url?: string
+          cover_url: string
+          created_at?: string
+          duration?: number
+          id?: string
+          release_id: string
+          title: string
+          track_order?: number
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          audio_url?: string
+          cover_url?: string
+          created_at?: string
+          duration?: number
+          id?: string
+          release_id?: string
+          title?: string
+          track_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracks_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

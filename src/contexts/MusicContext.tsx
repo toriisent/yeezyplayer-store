@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSupabaseMusic } from '../hooks/useSupabaseMusic';
 
 export interface LyricLine {
   time: number; // Time in seconds when this line starts
@@ -34,6 +36,7 @@ interface MusicContextType {
   isPlaying: boolean;
   releases: Release[];
   likedSongs: string[];
+  loading: boolean;
   playTrack: (track: Track) => void;
   pauseTrack: () => void;
   toggleLike: (trackId: string) => void;
@@ -62,57 +65,28 @@ interface MusicProviderProps {
 export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [releases, setReleases] = useState<Release[]>([
-    {
-      id: '1',
-      title: 'The Life of Pablo',
-      type: 'album',
-      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
-      releaseDate: '2016-02-14',
-      isFeatured: true,
-      tracks: [
-        {
-          id: '1-1',
-          title: 'Ultralight Beam',
-          artist: 'Kanye West',
-          audioUrl: '',
-          coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
-          duration: 324
-        },
-        {
-          id: '1-2',
-          title: 'Father Stretch My Hands Pt. 1',
-          artist: 'Kanye West',
-          audioUrl: '',
-          coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
-          duration: 256
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Donda',
-      type: 'album',
-      coverUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=400&fit=crop',
-      releaseDate: '2021-08-29',
-      isFeatured: true,
-      tracks: [
-        {
-          id: '2-1',
-          title: 'Donda Chant',
-          artist: 'Kanye West',
-          audioUrl: '',
-          coverUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=400&fit=crop',
-          duration: 52
-        }
-      ]
-    }
-  ]);
+  const [likedSongs, setLikedSongs] = useState<string[]>([]);
   
-  const [likedSongs, setLikedSongs] = useState<string[]>(() => {
-    const saved = localStorage.getItem('kanye-player-liked');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const {
+    releases,
+    loading,
+    addRelease: addReleaseToDb,
+    updateRelease: updateReleaseInDb,
+    deleteRelease: deleteReleaseFromDb,
+    toggleFeatured: toggleFeaturedInDb,
+    updateTrackLyrics: updateTrackLyricsInDb,
+    getLikedSongs,
+    toggleLike: toggleLikeInDb
+  } = useSupabaseMusic();
+
+  // Load liked songs on mount
+  useEffect(() => {
+    const loadLikedSongs = async () => {
+      const liked = await getLikedSongs();
+      setLikedSongs(liked);
+    };
+    loadLikedSongs();
+  }, []);
 
   const playTrack = (track: Track) => {
     setCurrentTrack(track);
@@ -123,13 +97,11 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
     setIsPlaying(false);
   };
 
-  const toggleLike = (trackId: string) => {
-    const newLikedSongs = likedSongs.includes(trackId)
-      ? likedSongs.filter(id => id !== trackId)
-      : [...likedSongs, trackId];
-    
-    setLikedSongs(newLikedSongs);
-    localStorage.setItem('kanye-player-liked', JSON.stringify(newLikedSongs));
+  const toggleLike = async (trackId: string) => {
+    await toggleLikeInDb(trackId);
+    // Refresh liked songs
+    const liked = await getLikedSongs();
+    setLikedSongs(liked);
   };
 
   const getAudioDuration = (url: string): Promise<number> => {
@@ -146,30 +118,23 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
   };
 
   const addRelease = (release: Release) => {
-    setReleases(prev => [...prev, release]);
+    addReleaseToDb(release);
   };
 
   const updateRelease = (release: Release) => {
-    setReleases(prev => prev.map(r => r.id === release.id ? release : r));
+    updateReleaseInDb(release);
   };
 
   const deleteRelease = (releaseId: string) => {
-    setReleases(prev => prev.filter(r => r.id !== releaseId));
+    deleteReleaseFromDb(releaseId);
   };
 
   const toggleFeatured = (releaseId: string) => {
-    setReleases(prev => prev.map(r => 
-      r.id === releaseId ? { ...r, isFeatured: !r.isFeatured } : r
-    ));
+    toggleFeaturedInDb(releaseId);
   };
 
   const updateTrackLyrics = (trackId: string, lyrics: LyricLine[]) => {
-    setReleases(prev => prev.map(release => ({
-      ...release,
-      tracks: release.tracks.map(track => 
-        track.id === trackId ? { ...track, lyrics } : track
-      )
-    })));
+    updateTrackLyricsInDb(trackId, lyrics);
   };
 
   return (
@@ -178,6 +143,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
       isPlaying,
       releases,
       likedSongs,
+      loading,
       playTrack,
       pauseTrack,
       toggleLike,
