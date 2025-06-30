@@ -24,7 +24,7 @@ export const AdminPanel: React.FC = () => {
     type: 'single' as 'single' | 'ep' | 'album',
     coverUrl: '',
     releaseDate: '',
-    tracks: [{ title: '', duration: 0 }]
+    tracks: [{ title: '', duration: 0, audioUrl: '' }]
   });
 
   const handleLogin = () => {
@@ -60,7 +60,7 @@ export const AdminPanel: React.FC = () => {
         id: `${Date.now()}-${index}`,
         title: track.title || `Track ${index + 1}`,
         artist: 'Kanye West',
-        audioUrl: '',
+        audioUrl: track.audioUrl || '',
         coverUrl: newRelease.coverUrl,
         duration: track.duration || 180
       }))
@@ -72,7 +72,7 @@ export const AdminPanel: React.FC = () => {
       type: 'single',
       coverUrl: '',
       releaseDate: '',
-      tracks: [{ title: '', duration: 0 }]
+      tracks: [{ title: '', duration: 0, audioUrl: '' }]
     });
     setActiveTab('manage');
   };
@@ -80,7 +80,7 @@ export const AdminPanel: React.FC = () => {
   const addTrack = () => {
     setNewRelease(prev => ({
       ...prev,
-      tracks: [...prev.tracks, { title: '', duration: 0 }]
+      tracks: [...prev.tracks, { title: '', duration: 0, audioUrl: '' }]
     }));
   };
 
@@ -106,7 +106,7 @@ export const AdminPanel: React.FC = () => {
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="modern-card bg-black border border-gray-800 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-gradient-to-r from-gray-900 to-black">
+        <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-black">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg animate-float">
               <Shield className="w-6 h-6 text-white" />
@@ -158,7 +158,7 @@ export const AdminPanel: React.FC = () => {
                       <p className="text-red-400 text-sm font-medium">{loginError}</p>
                     </div>
                   )}
-                  <Button onClick={handleLogin} className="w-full bg-white text-black hover:bg-gray-200 hover-scale transition-all duration-200">
+                  <Button onClick={handleLogin} className="w-full bg-gray-200 text-black hover:bg-gray-300 hover-scale transition-all duration-200">
                     <Shield className="w-4 h-4 mr-2" />
                     Access Admin Panel
                   </Button>
@@ -175,7 +175,7 @@ export const AdminPanel: React.FC = () => {
                   variant={activeTab === 'manage' ? 'default' : 'ghost'}
                   className={`flex-1 hover-scale transition-all duration-200 ${
                     activeTab === 'manage' 
-                      ? 'bg-white text-black shadow-lg' 
+                      ? 'bg-gray-200 text-black shadow-lg' 
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -187,7 +187,7 @@ export const AdminPanel: React.FC = () => {
                   variant={activeTab === 'add' ? 'default' : 'ghost'}
                   className={`flex-1 hover-scale transition-all duration-200 ${
                     activeTab === 'add' 
-                      ? 'bg-white text-black shadow-lg' 
+                      ? 'bg-gray-200 text-black shadow-lg' 
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -207,7 +207,7 @@ export const AdminPanel: React.FC = () => {
                 <div className="space-y-6 animate-slide-in-right">
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-bold text-white">Music Library</h3>
-                    <Badge variant="secondary" className="bg-white/10 text-white">
+                    <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
                       {releases.length} releases
                     </Badge>
                   </div>
@@ -246,7 +246,7 @@ export const AdminPanel: React.FC = () => {
                                   {release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}
                                 </span>
                               </div>
-                              <p className="text-gray-500 text-sm">{release.releaseDate}</p>
+                              <p className="text-gray-400 text-sm">{release.releaseDate}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Button
@@ -356,33 +356,41 @@ export const AdminPanel: React.FC = () => {
                         {newRelease.tracks.map((track, index) => (
                           <div 
                             key={index} 
-                            className="flex items-center gap-3 p-4 bg-gray-900/30 rounded-lg border border-gray-700 animate-fade-in"
+                            className="space-y-3 p-4 bg-gray-900/30 rounded-lg border border-gray-700 animate-fade-in"
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
-                            <span className="text-gray-400 text-sm font-medium w-8">{index + 1}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-gray-400 text-sm font-medium w-8">{index + 1}</span>
+                              <Input
+                                placeholder={`Track ${index + 1} title`}
+                                value={track.title}
+                                onChange={(e) => updateTrack(index, 'title', e.target.value)}
+                                className="bg-black/50 border-gray-600 text-white flex-1 hover-scale"
+                              />
+                              <Input
+                                type="number"
+                                placeholder="Duration (s)"
+                                value={track.duration || ''}
+                                onChange={(e) => updateTrack(index, 'duration', parseInt(e.target.value) || 0)}
+                                className="bg-black/50 border-gray-600 text-white w-24 hover-scale"
+                              />
+                              {newRelease.tracks.length > 1 && (
+                                <Button
+                                  onClick={() => removeTrack(index)}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
                             <Input
-                              placeholder={`Track ${index + 1} title`}
-                              value={track.title}
-                              onChange={(e) => updateTrack(index, 'title', e.target.value)}
-                              className="bg-black/50 border-gray-600 text-white flex-1 hover-scale"
+                              placeholder="MP3 URL (required for playback)"
+                              value={track.audioUrl}
+                              onChange={(e) => updateTrack(index, 'audioUrl', e.target.value)}
+                              className="bg-black/50 border-gray-600 text-white hover-scale"
                             />
-                            <Input
-                              type="number"
-                              placeholder="Duration"
-                              value={track.duration || ''}
-                              onChange={(e) => updateTrack(index, 'duration', parseInt(e.target.value) || 0)}
-                              className="bg-black/50 border-gray-600 text-white w-24 hover-scale"
-                            />
-                            {newRelease.tracks.length > 1 && (
-                              <Button
-                                onClick={() => removeTrack(index)}
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            )}
                           </div>
                         ))}
                       </div>
@@ -391,7 +399,7 @@ export const AdminPanel: React.FC = () => {
 
                   <Button 
                     onClick={handleAddRelease} 
-                    className="w-full bg-white text-black hover:bg-gray-200 hover-scale transition-all duration-200 text-lg py-6"
+                    className="w-full bg-gray-200 text-black hover:bg-gray-300 hover-scale transition-all duration-200 text-lg py-6"
                   >
                     <Upload className="w-5 h-5 mr-2" />
                     Add Release to Library

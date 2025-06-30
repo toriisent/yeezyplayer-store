@@ -31,7 +31,7 @@ const App = () => (
                 <AppSidebar />
                 
                 <div className="flex-1 flex flex-col">
-                  <header className="h-16 flex items-center px-6 bg-gradient-to-r from-gray-900 to-black border-b border-gray-800">
+                  <header className="h-16 flex items-center px-6 bg-black border-b border-gray-800">
                     <SidebarTrigger className="text-white hover:bg-white/10 transition-colors duration-200" />
                   </header>
                   

@@ -20,20 +20,20 @@ const Index: React.FC = () => {
             <p className="text-xl text-gray-300 mb-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
               Discover the complete discography of one of music's most influential artists
             </p>
-            <div className="flex justify-center gap-8 text-gray-400 animate-fade-in" style={{ animationDelay: '400ms' }}>
+            <div className="flex justify-center gap-8 text-white animate-fade-in" style={{ animationDelay: '400ms' }}>
               <div className="text-center">
                 <div className="text-3xl font-bold text-white">{releases.length}</div>
-                <div className="text-sm">Releases</div>
+                <div className="text-sm text-gray-300">Releases</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-white">
                   {releases.reduce((total, release) => total + release.tracks.length, 0)}
                 </div>
-                <div className="text-sm">Tracks</div>
+                <div className="text-sm text-gray-300">Tracks</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-white">{featuredReleases.length}</div>
-                <div className="text-sm">Featured</div>
+                <div className="text-sm text-gray-300">Featured</div>
               </div>
             </div>
           </div>
