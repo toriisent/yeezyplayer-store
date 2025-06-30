@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Heart, Music, Settings } from 'lucide-react';
+import { Home, Search, Heart, Music, Settings, BarChart } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,19 +15,19 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAdmin } from '../contexts/AdminContext';
-import { useMusic } from '../contexts/MusicContext';
 
 const navigationItems = [
   { title: 'Home', url: '/', icon: Home },
   { title: 'Search', url: '/search', icon: Search },
+  { title: 'Releases', url: '/releases', icon: Music },
   { title: 'Liked Songs', url: '/liked', icon: Heart },
+  { title: 'Stats', url: '/stats', icon: BarChart },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { openAdminPanel } = useAdmin();
-  const { likedSongs } = useMusic();
   const isCollapsed = state === 'collapsed';
 
   const getNavClass = (isActive: boolean) =>
@@ -39,7 +39,7 @@ export function AppSidebar() {
     <Sidebar className="bg-black border-r border-gray-800 animate-slide-in-left">
       <SidebarHeader className="p-6 border-b border-gray-800 animate-fade-in">
         <div className="flex flex-col">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-shimmer">
+          <h1 className="text-2xl font-bold text-white animate-shimmer">
             KanYe Player
           </h1>
           {!isCollapsed && (
@@ -74,11 +74,6 @@ export function AppSidebar() {
                         <item.icon className="w-5 h-5" />
                         {!isCollapsed && (
                           <span className="font-medium">{item.title}</span>
-                        )}
-                        {item.title === 'Liked Songs' && likedSongs.length > 0 && !isCollapsed && (
-                          <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse-soft">
-                            {likedSongs.length}
-                          </span>
                         )}
                       </NavLink>
                     </SidebarMenuButton>

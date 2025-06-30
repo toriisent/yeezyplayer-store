@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useMusic } from '../contexts/MusicContext';
@@ -13,7 +12,7 @@ import { Release } from '../contexts/MusicContext';
 
 export const AdminPanel: React.FC = () => {
   const { isAdminPanelOpen, isAuthenticated, login, logout, closeAdminPanel } = useAdmin();
-  const { releases, addRelease, deleteRelease, toggleFeatured } = useMusic();
+  const { releases, addRelease, deleteRelease, toggleFeatured, getAudioDuration } = useMusic();
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState<'login' | 'manage' | 'add'>('login');
@@ -24,7 +23,8 @@ export const AdminPanel: React.FC = () => {
     type: 'single' as 'single' | 'ep' | 'album',
     coverUrl: '',
     releaseDate: '',
-    tracks: [{ title: '', duration: 0, audioUrl: '' }]
+    artist: 'Kanye West',
+    tracks: [{ title: '', duration: 0, audioUrl: '', artist: 'Kanye West' }]
   });
 
   const handleLogin = () => {
@@ -44,26 +44,49 @@ export const AdminPanel: React.FC = () => {
     setLoginError('');
   };
 
-  const handleAddRelease = () => {
-    if (!newRelease.title || !newRelease.coverUrl || !newRelease.releaseDate) {
+  const handleAddRelease = async () => {
+    if (!newRelease.title || !newRelease.coverUrl) {
       return;
     }
+
+    // Auto-set release date if not provided
+    const releaseDate = newRelease.releaseDate || new Date().toISOString().split('T')[0];
+
+    // Process tracks and get durations
+    const processedTracks = await Promise.all(
+      newRelease.tracks.map(async (track, index) => {
+        let duration = track.duration;
+        
+        // Auto-get duration from MP3 if not provided and audioUrl exists
+        if (!duration && track.audioUrl) {
+          try {
+            duration = await getAudioDuration(track.audioUrl);
+          } catch (error) {
+            duration = 180; // Default fallback
+          }
+        } else if (!duration) {
+          duration = 180; // Default fallback
+        }
+
+        return {
+          id: `${Date.now()}-${index}`,
+          title: track.title || `Track ${index + 1}`,
+          artist: track.artist || newRelease.artist,
+          audioUrl: track.audioUrl || '',
+          coverUrl: newRelease.coverUrl,
+          duration
+        };
+      })
+    );
 
     const release: Release = {
       id: Date.now().toString(),
       title: newRelease.title,
       type: newRelease.type,
       coverUrl: newRelease.coverUrl,
-      releaseDate: newRelease.releaseDate,
+      releaseDate,
       isFeatured: false,
-      tracks: newRelease.tracks.map((track, index) => ({
-        id: `${Date.now()}-${index}`,
-        title: track.title || `Track ${index + 1}`,
-        artist: 'Kanye West',
-        audioUrl: track.audioUrl || '',
-        coverUrl: newRelease.coverUrl,
-        duration: track.duration || 180
-      }))
+      tracks: processedTracks
     };
 
     addRelease(release);
@@ -72,7 +95,8 @@ export const AdminPanel: React.FC = () => {
       type: 'single',
       coverUrl: '',
       releaseDate: '',
-      tracks: [{ title: '', duration: 0, audioUrl: '' }]
+      artist: 'Kanye West',
+      tracks: [{ title: '', duration: 0, audioUrl: '', artist: 'Kanye West' }]
     });
     setActiveTab('manage');
   };
@@ -80,7 +104,7 @@ export const AdminPanel: React.FC = () => {
   const addTrack = () => {
     setNewRelease(prev => ({
       ...prev,
-      tracks: [...prev.tracks, { title: '', duration: 0, audioUrl: '' }]
+      tracks: [...prev.tracks, { title: '', duration: 0, audioUrl: '', artist: prev.artist }]
     }));
   };
 
@@ -158,7 +182,7 @@ export const AdminPanel: React.FC = () => {
                       <p className="text-red-400 text-sm font-medium">{loginError}</p>
                     </div>
                   )}
-                  <Button onClick={handleLogin} className="w-full bg-gray-200 text-black hover:bg-gray-300 hover-scale transition-all duration-200">
+                  <Button onClick={handleLogin} className="w-full bg-black text-white border border-white hover:bg-white hover:text-black hover-scale transition-all duration-200">
                     <Shield className="w-4 h-4 mr-2" />
                     Access Admin Panel
                   </Button>
@@ -172,11 +196,10 @@ export const AdminPanel: React.FC = () => {
               <div className="flex gap-2 mb-8 p-1 bg-gray-900/50 rounded-lg">
                 <Button
                   onClick={() => setActiveTab('manage')}
-                  variant={activeTab === 'manage' ? 'default' : 'ghost'}
                   className={`flex-1 hover-scale transition-all duration-200 ${
                     activeTab === 'manage' 
-                      ? 'bg-gray-200 text-black shadow-lg' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      ? 'bg-black text-white border border-white shadow-lg' 
+                      : 'bg-transparent text-gray-300 hover:text-white hover:bg-white/10 border border-transparent'
                   }`}
                 >
                   <Music2 className="w-4 h-4 mr-2" />
@@ -184,11 +207,10 @@ export const AdminPanel: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => setActiveTab('add')}
-                  variant={activeTab === 'add' ? 'default' : 'ghost'}
                   className={`flex-1 hover-scale transition-all duration-200 ${
                     activeTab === 'add' 
-                      ? 'bg-gray-200 text-black shadow-lg' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      ? 'bg-black text-white border border-white shadow-lg' 
+                      : 'bg-transparent text-gray-300 hover:text-white hover:bg-white/10 border border-transparent'
                   }`}
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -196,8 +218,7 @@ export const AdminPanel: React.FC = () => {
                 </Button>
                 <Button 
                   onClick={handleLogout} 
-                  variant="ghost"
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200"
+                  className="bg-transparent text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200 border border-transparent"
                 >
                   Logout
                 </Button>
@@ -251,21 +272,19 @@ export const AdminPanel: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <Button
                                 onClick={() => toggleFeatured(release.id)}
-                                variant="ghost"
-                                size="sm"
                                 className={`hover-scale transition-all duration-200 ${
                                   release.isFeatured 
-                                    ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-500/10' 
-                                    : 'text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10'
+                                    ? 'bg-yellow-500/20 text-yellow-400 hover:text-yellow-300 border border-yellow-500/30' 
+                                    : 'bg-transparent text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 border border-transparent'
                                 }`}
+                                size="sm"
                               >
                                 <Star className={`w-5 h-5 ${release.isFeatured ? 'fill-current' : ''}`} />
                               </Button>
                               <Button
                                 onClick={() => deleteRelease(release.id)}
-                                variant="ghost"
+                                className="bg-transparent text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200 border border-transparent"
                                 size="sm"
-                                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200"
                               >
                                 <Trash2 className="w-5 h-5" />
                               </Button>
@@ -297,6 +316,17 @@ export const AdminPanel: React.FC = () => {
                           placeholder="Enter release title..."
                         />
                       </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="artist" className="text-gray-300 font-medium">Artist Name</Label>
+                        <Input
+                          id="artist"
+                          value={newRelease.artist}
+                          onChange={(e) => setNewRelease(prev => ({ ...prev, artist: e.target.value }))}
+                          className="bg-black/50 border-gray-600 text-white focus:border-white/50 focus:ring-white/20 hover-scale"
+                          placeholder="Enter artist name..."
+                        />
+                      </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="type" className="text-gray-300 font-medium">Release Type</Label>
@@ -306,10 +336,10 @@ export const AdminPanel: React.FC = () => {
                           <SelectTrigger className="bg-black/50 border-gray-600 text-white focus:border-white/50 hover-scale">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-900 border-gray-700">
-                            <SelectItem value="single">Single</SelectItem>
-                            <SelectItem value="ep">EP</SelectItem>
-                            <SelectItem value="album">Album</SelectItem>
+                          <SelectContent className="bg-black border-gray-700">
+                            <SelectItem value="single" className="text-white hover:bg-gray-800 focus:bg-gray-800">Single</SelectItem>
+                            <SelectItem value="ep" className="text-white hover:bg-gray-800 focus:bg-gray-800">EP</SelectItem>
+                            <SelectItem value="album" className="text-white hover:bg-gray-800 focus:bg-gray-800">Album</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -327,7 +357,7 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="releaseDate" className="text-gray-300 font-medium">Release Date</Label>
+                        <Label htmlFor="releaseDate" className="text-gray-300 font-medium">Release Date (optional)</Label>
                         <Input
                           id="releaseDate"
                           type="date"
@@ -335,6 +365,7 @@ export const AdminPanel: React.FC = () => {
                           onChange={(e) => setNewRelease(prev => ({ ...prev, releaseDate: e.target.value }))}
                           className="bg-black/50 border-gray-600 text-white focus:border-white/50 focus:ring-white/20 hover-scale"
                         />
+                        <p className="text-xs text-gray-500">Leave empty to use today's date</p>
                       </div>
                     </div>
 
@@ -344,8 +375,7 @@ export const AdminPanel: React.FC = () => {
                         <Button 
                           onClick={addTrack} 
                           size="sm" 
-                          variant="outline"
-                          className="border-gray-600 text-gray-300 hover:text-white hover:bg-white/10 hover-scale transition-all duration-200"
+                          className="bg-transparent border border-gray-600 text-gray-300 hover:text-white hover:bg-white/10 hover-scale transition-all duration-200"
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Add Track
@@ -368,6 +398,12 @@ export const AdminPanel: React.FC = () => {
                                 className="bg-black/50 border-gray-600 text-white flex-1 hover-scale"
                               />
                               <Input
+                                placeholder="Artist"
+                                value={track.artist}
+                                onChange={(e) => updateTrack(index, 'artist', e.target.value)}
+                                className="bg-black/50 border-gray-600 text-white w-32 hover-scale"
+                              />
+                              <Input
                                 type="number"
                                 placeholder="Duration (s)"
                                 value={track.duration || ''}
@@ -377,9 +413,8 @@ export const AdminPanel: React.FC = () => {
                               {newRelease.tracks.length > 1 && (
                                 <Button
                                   onClick={() => removeTrack(index)}
-                                  variant="ghost"
+                                  className="bg-transparent text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200 border border-transparent"
                                   size="sm"
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover-scale transition-all duration-200"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -391,6 +426,7 @@ export const AdminPanel: React.FC = () => {
                               onChange={(e) => updateTrack(index, 'audioUrl', e.target.value)}
                               className="bg-black/50 border-gray-600 text-white hover-scale"
                             />
+                            <p className="text-xs text-gray-500">Duration will be auto-detected from MP3 if not specified</p>
                           </div>
                         ))}
                       </div>
@@ -399,7 +435,7 @@ export const AdminPanel: React.FC = () => {
 
                   <Button 
                     onClick={handleAddRelease} 
-                    className="w-full bg-gray-200 text-black hover:bg-gray-300 hover-scale transition-all duration-200 text-lg py-6"
+                    className="w-full bg-black text-white border border-white hover:bg-white hover:text-black hover-scale transition-all duration-200 text-lg py-6"
                   >
                     <Upload className="w-5 h-5 mr-2" />
                     Add Release to Library

@@ -32,6 +32,7 @@ interface MusicContextType {
   updateRelease: (release: Release) => void;
   deleteRelease: (releaseId: string) => void;
   toggleFeatured: (releaseId: string) => void;
+  getAudioDuration: (url: string) => Promise<number>;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -121,6 +122,19 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
     localStorage.setItem('kanye-player-liked', JSON.stringify(newLikedSongs));
   };
 
+  const getAudioDuration = (url: string): Promise<number> => {
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      audio.addEventListener('loadedmetadata', () => {
+        resolve(Math.floor(audio.duration) || 180);
+      });
+      audio.addEventListener('error', () => {
+        resolve(180); // Default duration if error
+      });
+      audio.src = url;
+    });
+  };
+
   const addRelease = (release: Release) => {
     setReleases(prev => [...prev, release]);
   };
@@ -151,7 +165,8 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
       addRelease,
       updateRelease,
       deleteRelease,
-      toggleFeatured
+      toggleFeatured,
+      getAudioDuration
     }}>
       {children}
     </MusicContext.Provider>
