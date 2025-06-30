@@ -23,7 +23,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
   useEffect(() => {
     if (!currentTrack?.lyrics) return;
 
-    // Find the current active line and word with better timing
+    // More precise timing calculation with minimal delay
     let currentLineIndex = -1;
     let currentWordIndex = -1;
 
@@ -31,17 +31,16 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
       const line = currentTrack.lyrics[i];
       const nextLine = currentTrack.lyrics[i + 1];
       
-      // Check if we're in this line's time range
-      if (currentTime >= line.time && (!nextLine || currentTime < nextLine.time)) {
+      // Check if we're in this line's time range with tighter timing
+      if (currentTime >= (line.time - 0.1) && (!nextLine || currentTime < (nextLine.time - 0.1))) {
         currentLineIndex = i;
         
-        // Find active word within the line with more precise timing
+        // Find active word with immediate timing response
         for (let j = 0; j < line.words.length; j++) {
           const word = line.words[j];
           const nextWord = line.words[j + 1];
           
-          // Word is active if current time is between its start and the next word's start
-          // or if it's the last word and we're still within its end time
+          // Immediate word highlighting with no delay buffer
           if (currentTime >= word.start && 
               (!nextWord ? currentTime <= word.end : currentTime < nextWord.start)) {
             currentWordIndex = j;
@@ -92,7 +91,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
             {currentTrack.lyrics.map((line, lineIndex) => (
               <div
                 key={lineIndex}
-                className={`transition-all duration-300 ${
+                className={`transition-all duration-100 ${
                   lineIndex === activeLineIndex
                     ? 'transform scale-110'
                     : lineIndex < activeLineIndex
@@ -104,11 +103,11 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
                   {line.words.map((wordObj, wordIndex) => (
                     <span
                       key={wordIndex}
-                      className={`inline-block mx-1 transition-all duration-150 ${
+                      className={`inline-block mx-1 transition-all duration-75 ${
                         lineIndex === activeLineIndex && wordIndex === activeWordIndex
-                          ? 'text-white font-medium bg-gradient-to-r from-blue-500/30 to-purple-500/30 px-2 py-1 rounded-lg shadow-lg transform scale-105 border border-white/20'
+                          ? 'text-white font-medium bg-gradient-to-r from-blue-500/40 to-purple-500/40 px-3 py-2 rounded-lg shadow-xl transform scale-110 border border-white/30'
                           : lineIndex === activeLineIndex && wordIndex < activeWordIndex
-                          ? 'text-gray-200 opacity-80'
+                          ? 'text-gray-200 opacity-90'
                           : lineIndex === activeLineIndex
                           ? 'text-gray-400'
                           : lineIndex < activeLineIndex

@@ -64,7 +64,7 @@ export const MusicPlayer: React.FC = () => {
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
       setProgress(value);
-      setTimeout(() => setIsDragging(false), 100);
+      setTimeout(() => setIsDragging(false), 50);
     }
   };
 
