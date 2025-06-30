@@ -36,7 +36,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-gray-800 animate-slide-in-left">
-      <SidebarHeader className="p-6 border-b border-gray-800 animate-fade-in bg-gradient-to-r from-gray-900/80 to-black/80">
+      <SidebarHeader className="p-6 border-b border-gray-800 animate-fade-in bg-gradient-to-r from-gray-900 to-black">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-white animate-shimmer">
             KanYe Player
@@ -54,7 +54,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-4 bg-gradient-to-b from-black/50 to-gray-900/50">
+      <SidebarContent className="p-4 bg-gradient-to-b from-black to-gray-900">
         <SidebarGroup>
           <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4 animate-fade-in">
             Navigation
