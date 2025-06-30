@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useMusic } from '../contexts/MusicContext';
 import { LyricLine } from '../contexts/MusicContext';
 import { Button } from '@/components/ui/button';
-import { Music, X } from 'lucide-react';
+import { Mic, X } from 'lucide-react';
 
 interface LyricsDisplayProps {
   currentTime: number;
@@ -23,7 +23,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
   useEffect(() => {
     if (!currentTrack?.lyrics) return;
 
-    // Find the current active line and word
+    // Find the current active line and word with better timing
     let currentLineIndex = -1;
     let currentWordIndex = -1;
 
@@ -31,13 +31,19 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
       const line = currentTrack.lyrics[i];
       const nextLine = currentTrack.lyrics[i + 1];
       
+      // Check if we're in this line's time range
       if (currentTime >= line.time && (!nextLine || currentTime < nextLine.time)) {
         currentLineIndex = i;
         
-        // Find active word within the line
+        // Find active word within the line with more precise timing
         for (let j = 0; j < line.words.length; j++) {
           const word = line.words[j];
-          if (currentTime >= word.start && currentTime <= word.end) {
+          const nextWord = line.words[j + 1];
+          
+          // Word is active if current time is between its start and the next word's start
+          // or if it's the last word and we're still within its end time
+          if (currentTime >= word.start && 
+              (!nextWord ? currentTime <= word.end : currentTime < nextWord.start)) {
             currentWordIndex = j;
             break;
           }
@@ -86,7 +92,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
             {currentTrack.lyrics.map((line, lineIndex) => (
               <div
                 key={lineIndex}
-                className={`transition-all duration-500 ${
+                className={`transition-all duration-300 ${
                   lineIndex === activeLineIndex
                     ? 'transform scale-110'
                     : lineIndex < activeLineIndex
@@ -98,20 +104,17 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
                   {line.words.map((wordObj, wordIndex) => (
                     <span
                       key={wordIndex}
-                      className={`inline-block mx-1 transition-all duration-300 ${
-                        lineIndex === activeLineIndex && wordIndex <= activeWordIndex
-                          ? 'text-white font-medium bg-gradient-to-r from-white/20 to-white/10 px-2 py-1 rounded-lg shadow-lg transform scale-105'
+                      className={`inline-block mx-1 transition-all duration-150 ${
+                        lineIndex === activeLineIndex && wordIndex === activeWordIndex
+                          ? 'text-white font-medium bg-gradient-to-r from-blue-500/30 to-purple-500/30 px-2 py-1 rounded-lg shadow-lg transform scale-105 border border-white/20'
+                          : lineIndex === activeLineIndex && wordIndex < activeWordIndex
+                          ? 'text-gray-200 opacity-80'
                           : lineIndex === activeLineIndex
-                          ? 'text-gray-300'
+                          ? 'text-gray-400'
                           : lineIndex < activeLineIndex
                           ? 'text-gray-500'
                           : 'text-gray-400'
                       }`}
-                      style={{
-                        transitionDelay: lineIndex === activeLineIndex && wordIndex <= activeWordIndex 
-                          ? `${(wordObj.start - line.time) * 100}ms` 
-                          : '0ms'
-                      }}
                     >
                       {wordObj.word}
                     </span>
@@ -122,7 +125,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
             
             {currentTrack.lyrics.length === 0 && (
               <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                <Music className="w-16 h-16 mb-4 opacity-50" />
+                <Mic className="w-16 h-16 mb-4 opacity-50" />
                 <p className="text-xl">No lyrics available</p>
                 <p className="text-sm">Lyrics can be added through the admin panel</p>
               </div>

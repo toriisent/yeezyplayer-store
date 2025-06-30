@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMusic } from '../contexts/MusicContext';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, Repeat, Music } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, Repeat, Mic } from 'lucide-react';
 import { LyricsDisplay } from './LyricsDisplay';
 
 export const MusicPlayer: React.FC = () => {
@@ -65,6 +65,18 @@ export const MusicPlayer: React.FC = () => {
       setCurrentTime(newTime);
       setProgress(value);
       setTimeout(() => setIsDragging(false), 100);
+    }
+  };
+
+  const handleSkipForward = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, audioRef.current.duration || 0);
+    }
+  };
+
+  const handleSkipBackward = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
     }
   };
 
@@ -140,11 +152,15 @@ export const MusicPlayer: React.FC = () => {
                 </h4>
                 <p className="text-xs text-gray-400 truncate">{currentTrack.artist}</p>
               </div>
+            </div>
+
+            {/* Controls - Center */}
+            <div className="flex items-center justify-center gap-2">
               <Button
                 onClick={handleLike}
                 variant="ghost"
                 size="sm"
-                className="flex-shrink-0 hover:scale-105 transition-all duration-200 rounded-full p-2 hover:bg-gray-800/50"
+                className="hover:scale-105 transition-all duration-200 rounded-full p-2 hover:bg-gray-800/50"
               >
                 <Heart className={`w-4 h-4 transition-all duration-200 ${
                   isLiked 
@@ -152,15 +168,12 @@ export const MusicPlayer: React.FC = () => {
                     : 'text-gray-400 hover:text-red-400'
                 }`} />
               </Button>
-            </div>
 
-            {/* Controls - Center */}
-            <div className="flex items-center justify-center gap-4">
               <Button 
+                onClick={handleSkipBackward}
                 variant="ghost" 
                 size="sm" 
-                disabled
-                className="hover:scale-105 transition-transform duration-200 opacity-30 rounded-full p-2"
+                className="hover:scale-105 transition-transform duration-200 rounded-full p-2 hover:bg-gray-800/50 text-gray-300"
               >
                 <SkipBack className="w-4 h-4" />
               </Button>
@@ -177,10 +190,10 @@ export const MusicPlayer: React.FC = () => {
               </Button>
               
               <Button 
+                onClick={handleSkipForward}
                 variant="ghost" 
                 size="sm" 
-                disabled
-                className="hover:scale-105 transition-transform duration-200 opacity-30 rounded-full p-2"
+                className="hover:scale-105 transition-transform duration-200 rounded-full p-2 hover:bg-gray-800/50 text-gray-300"
               >
                 <SkipForward className="w-4 h-4" />
               </Button>
@@ -206,7 +219,7 @@ export const MusicPlayer: React.FC = () => {
                 disabled={!hasLyrics}
                 title={hasLyrics ? 'Show lyrics' : 'No lyrics available'}
               >
-                <Music className="w-4 h-4" />
+                <Mic className="w-4 h-4" />
               </Button>
             </div>
 
