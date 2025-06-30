@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMusic } from '../contexts/MusicContext';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, Repeat } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, Repeat, Music } from 'lucide-react';
+import { LyricsDisplay } from './LyricsDisplay';
 
 export const MusicPlayer: React.FC = () => {
   const { currentTrack, isPlaying, playTrack, pauseTrack, toggleLike, likedSongs } = useMusic();
@@ -13,6 +14,7 @@ export const MusicPlayer: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -82,6 +84,7 @@ export const MusicPlayer: React.FC = () => {
 
   const isLiked = likedSongs.includes(currentTrack.id);
   const totalDuration = duration || currentTrack.duration;
+  const hasLyrics = currentTrack.lyrics && currentTrack.lyrics.length > 0;
 
   return (
     <>
@@ -97,6 +100,13 @@ export const MusicPlayer: React.FC = () => {
         }}
         loop={isLooping}
       />
+      
+      <LyricsDisplay 
+        currentTime={currentTime}
+        isVisible={showLyrics}
+        onClose={() => setShowLyrics(false)}
+      />
+      
       <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-gray-800/50 z-50">
         <div className="max-w-7xl mx-auto px-6 py-3">
           {/* Progress Bar */}
@@ -184,6 +194,19 @@ export const MusicPlayer: React.FC = () => {
                 }`}
               >
                 <Repeat className="w-4 h-4" />
+              </Button>
+
+              <Button
+                onClick={() => setShowLyrics(!showLyrics)}
+                variant="ghost"
+                size="sm"
+                className={`hover:scale-105 transition-all duration-200 rounded-full p-2 ${
+                  showLyrics ? 'text-white bg-gray-800' : hasLyrics ? 'text-gray-300 hover:text-white hover:bg-gray-800/50' : 'text-gray-600 opacity-50 cursor-not-allowed'
+                }`}
+                disabled={!hasLyrics}
+                title={hasLyrics ? 'Show lyrics' : 'No lyrics available'}
+              >
+                <Music className="w-4 h-4" />
               </Button>
             </div>
 

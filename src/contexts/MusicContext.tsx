@@ -1,5 +1,13 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+export interface LyricLine {
+  time: number; // Time in seconds when this line starts
+  words: Array<{
+    word: string;
+    start: number; // Start time for this word in seconds
+    end: number; // End time for this word in seconds
+  }>;
+}
 
 export interface Track {
   id: string;
@@ -8,6 +16,7 @@ export interface Track {
   audioUrl: string;
   coverUrl: string;
   duration: number;
+  lyrics?: LyricLine[]; // Optional lyrics with timing
 }
 
 export interface Release {
@@ -33,6 +42,7 @@ interface MusicContextType {
   deleteRelease: (releaseId: string) => void;
   toggleFeatured: (releaseId: string) => void;
   getAudioDuration: (url: string) => Promise<number>;
+  updateTrackLyrics: (trackId: string, lyrics: LyricLine[]) => void;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -153,6 +163,15 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
     ));
   };
 
+  const updateTrackLyrics = (trackId: string, lyrics: LyricLine[]) => {
+    setReleases(prev => prev.map(release => ({
+      ...release,
+      tracks: release.tracks.map(track => 
+        track.id === trackId ? { ...track, lyrics } : track
+      )
+    })));
+  };
+
   return (
     <MusicContext.Provider value={{
       currentTrack,
@@ -166,7 +185,8 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
       updateRelease,
       deleteRelease,
       toggleFeatured,
-      getAudioDuration
+      getAudioDuration,
+      updateTrackLyrics
     }}>
       {children}
     </MusicContext.Provider>
