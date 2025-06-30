@@ -10,6 +10,7 @@ export const MusicPlayer: React.FC = () => {
   const [volume, setVolume] = useState([50]);
   const [progress, setProgress] = useState([0]);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -23,11 +24,14 @@ export const MusicPlayer: React.FC = () => {
   useEffect(() => {
     if (audioRef.current && currentTrack) {
       audioRef.current.src = currentTrack.audioUrl;
+      audioRef.current.addEventListener('loadedmetadata', () => {
+        setDuration(audioRef.current?.duration || 0);
+      });
       if (isPlaying) {
         audioRef.current.play().catch(console.error);
       }
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -40,22 +44,31 @@ export const MusicPlayer: React.FC = () => {
   }, [isPlaying]);
 
   const handleTimeUpdate = () => {
-    if (audioRef.current && currentTrack && !isDragging) {
+    if (audioRef.current && !isDragging) {
       const current = audioRef.current.currentTime;
-      const duration = currentTrack.duration;
+      const total = audioRef.current.duration || duration;
       setCurrentTime(current);
-      setProgress([(current / duration) * 100]);
+      if (total > 0) {
+        setProgress([(current / total) * 100]);
+      }
     }
   };
 
   const handleProgressChange = (value: number[]) => {
-    if (audioRef.current && currentTrack) {
+    if (audioRef.current) {
       setIsDragging(true);
-      const newTime = (value[0] / 100) * currentTrack.duration;
+      const total = audioRef.current.duration || duration;
+      const newTime = (value[0] / 100) * total;
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
       setProgress(value);
       setTimeout(() => setIsDragging(false), 100);
+    }
+  };
+
+  const handleLike = () => {
+    if (currentTrack) {
+      toggleLike(currentTrack.id);
     }
   };
 
@@ -68,6 +81,7 @@ export const MusicPlayer: React.FC = () => {
   if (!currentTrack) return null;
 
   const isLiked = likedSongs.includes(currentTrack.id);
+  const totalDuration = duration || currentTrack.duration;
 
   return (
     <>
@@ -83,27 +97,27 @@ export const MusicPlayer: React.FC = () => {
         }}
         loop={isLooping}
       />
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-black/95 via-gray-900/95 to-black/95 backdrop-blur-xl border-t border-gray-700/30 z-50 animate-slide-in-right">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          {/* Modern Progress Bar */}
-          <div className="mb-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-gray-800/50 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          {/* Progress Bar */}
+          <div className="mb-3">
             <Slider
               value={progress}
               onValueChange={handleProgressChange}
               max={100}
               step={0.1}
-              className="w-full [&_[role=slider]]:bg-white [&_[role=slider]]:border-white [&_[role=slider]]:shadow-lg [&_[role=slider]]:hover:scale-110 [&_[role=slider]]:transition-transform"
+              className="w-full h-1 [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:bg-white [&_[role=slider]]:border-0 [&_[role=slider]]:shadow-lg [&_[data-orientation=horizontal]]:h-1 [&_[data-orientation=horizontal]]:bg-gray-700"
             />
-            <div className="flex justify-between text-xs text-gray-300 mt-2 font-mono">
+            <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
               <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(currentTrack.duration)}</span>
+              <span>{formatTime(totalDuration)}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className="grid grid-cols-3 items-center gap-6">
             {/* Track Info - Left */}
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-14 h-14 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden flex-shrink-0 shadow-2xl hover:scale-105 transition-transform duration-300 ring-1 ring-white/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-12 h-12 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 shadow-xl">
                 <img
                   src={currentTrack.coverUrl}
                   alt={currentTrack.title}
@@ -111,44 +125,44 @@ export const MusicPlayer: React.FC = () => {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-semibold text-white truncate hover:text-gray-200 transition-colors duration-200 text-sm">
+                <h4 className="font-medium text-white truncate text-sm">
                   {currentTrack.title}
                 </h4>
                 <p className="text-xs text-gray-400 truncate">{currentTrack.artist}</p>
               </div>
               <Button
-                onClick={() => toggleLike(currentTrack.id)}
+                onClick={handleLike}
                 variant="ghost"
                 size="sm"
-                className="flex-shrink-0 hover:scale-110 transition-all duration-300 rounded-full p-2"
+                className="flex-shrink-0 hover:scale-105 transition-all duration-200 rounded-full p-2 hover:bg-gray-800/50"
               >
-                <Heart className={`w-5 h-5 transition-all duration-300 ${
+                <Heart className={`w-4 h-4 transition-all duration-200 ${
                   isLiked 
-                    ? 'fill-red-500 text-red-500 drop-shadow-lg' 
+                    ? 'fill-red-500 text-red-500' 
                     : 'text-gray-400 hover:text-red-400'
                 }`} />
               </Button>
             </div>
 
             {/* Controls - Center */}
-            <div className="flex items-center justify-center gap-6">
+            <div className="flex items-center justify-center gap-4">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 disabled
-                className="hover:scale-110 transition-transform duration-200 opacity-40 rounded-full p-2"
+                className="hover:scale-105 transition-transform duration-200 opacity-30 rounded-full p-2"
               >
-                <SkipBack className="w-5 h-5" />
+                <SkipBack className="w-4 h-4" />
               </Button>
               
               <Button
                 onClick={isPlaying ? pauseTrack : () => playTrack(currentTrack)}
-                className="bg-white text-black hover:bg-gray-100 rounded-full w-14 h-14 p-0 shadow-2xl hover:scale-110 hover:shadow-3xl transition-all duration-300 ring-2 ring-white/20"
+                className="bg-white text-black hover:bg-gray-100 rounded-full w-12 h-12 p-0 shadow-lg hover:scale-105 transition-all duration-200"
               >
                 {isPlaying ? (
-                  <Pause className="w-6 h-6" />
+                  <Pause className="w-5 h-5" />
                 ) : (
-                  <Play className="w-6 h-6 ml-1" />
+                  <Play className="w-5 h-5 ml-0.5" />
                 )}
               </Button>
               
@@ -156,36 +170,36 @@ export const MusicPlayer: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 disabled
-                className="hover:scale-110 transition-transform duration-200 opacity-40 rounded-full p-2"
+                className="hover:scale-105 transition-transform duration-200 opacity-30 rounded-full p-2"
               >
-                <SkipForward className="w-5 h-5" />
+                <SkipForward className="w-4 h-4" />
               </Button>
 
               <Button
                 onClick={() => setIsLooping(!isLooping)}
                 variant="ghost"
                 size="sm"
-                className={`hover:scale-110 transition-all duration-300 rounded-full p-2 ${
-                  isLooping ? 'text-white bg-white/10 shadow-lg' : 'text-gray-400 hover:text-white'
+                className={`hover:scale-105 transition-all duration-200 rounded-full p-2 ${
+                  isLooping ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
                 }`}
               >
-                <Repeat className="w-5 h-5" />
+                <Repeat className="w-4 h-4" />
               </Button>
             </div>
 
             {/* Volume Control - Right */}
-            <div className="flex items-center justify-end gap-4">
-              <Volume2 className="w-5 h-5 text-gray-400" />
-              <div className="w-28">
+            <div className="flex items-center justify-end gap-3">
+              <Volume2 className="w-4 h-4 text-gray-400" />
+              <div className="w-24">
                 <Slider
                   value={volume}
                   onValueChange={setVolume}
                   max={100}
                   step={1}
-                  className="w-full [&_[role=slider]]:bg-white [&_[role=slider]]:border-white [&_[role=slider]]:w-4 [&_[role=slider]]:h-4"
+                  className="w-full h-1 [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:bg-white [&_[role=slider]]:border-0 [&_[data-orientation=horizontal]]:h-1 [&_[data-orientation=horizontal]]:bg-gray-700"
                 />
               </div>
-              <div className="text-xs text-gray-400 font-mono w-8 text-right">
+              <div className="text-xs text-gray-400 font-mono w-6 text-right">
                 {volume[0]}
               </div>
             </div>
