@@ -29,7 +29,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   const login = (password: string): boolean => {
-    if (password === 'WELOVEBULLY2') {
+    if (password === 'yzydotcom') {
       setIsAuthenticated(true);
       return true;
     }
