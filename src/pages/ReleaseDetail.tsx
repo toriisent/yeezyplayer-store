@@ -1,18 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMusic } from '../contexts/MusicContext';
 import { TrackList } from '../components/TrackList';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, Pause } from 'lucide-react';
 
 const ReleaseDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { releases, playTrack } = useMusic();
+  const { releases, playTrack, currentTrack, isPlaying, pauseTrack } = useMusic();
   const [dominantColor, setDominantColor] = useState('rgb(0, 0, 0)');
 
   const release = releases.find(r => r.id === id);
+
+  // Check if any track from this release is currently playing
+  const isReleaseTrackPlaying = currentTrack && release?.tracks.some(track => track.id === currentTrack.id) && isPlaying;
 
   useEffect(() => {
     if (release?.coverUrl) {
@@ -70,8 +72,10 @@ const ReleaseDetail = () => {
     );
   }
 
-  const handlePlayAll = () => {
-    if (release.tracks.length > 0) {
+  const handlePlayPause = () => {
+    if (isReleaseTrackPlaying) {
+      pauseTrack();
+    } else if (release.tracks.length > 0) {
       playTrack(release.tracks[0]);
     }
   };
@@ -128,12 +132,21 @@ const ReleaseDetail = () => {
             
             <div className="flex items-center gap-4">
               <Button
-                onClick={handlePlayAll}
+                onClick={handlePlayPause}
                 size="lg"
                 className="bg-white text-black hover:bg-gray-200 font-semibold px-8"
               >
-                <Play className="w-5 h-5 mr-2" />
-                Play
+                {isReleaseTrackPlaying ? (
+                  <>
+                    <Pause className="w-5 h-5 mr-2" />
+                    Playing
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 mr-2" />
+                    Play
+                  </>
+                )}
               </Button>
             </div>
           </div>
