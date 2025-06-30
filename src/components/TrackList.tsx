@@ -54,6 +54,14 @@ export const TrackList: React.FC<TrackListProps> = ({ tracks }) => {
                 {index + 1}
               </span>
             </div>
+
+            <div className="w-12 h-12 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 shadow-lg">
+              <img
+                src={track.coverUrl}
+                alt={track.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
             
             <div className="flex-1 min-w-0">
               <h4 className={`font-medium truncate transition-colors duration-200 ${
