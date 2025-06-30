@@ -32,14 +32,14 @@ export function AppSidebar() {
 
   const getNavClass = (isActive: boolean) =>
     isActive 
-      ? 'bg-white/10 text-white font-medium border-r-2 border-white' 
-      : 'text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200';
+      ? 'bg-white/10 text-white font-medium border-r-2 border-white animate-fade-in' 
+      : 'text-gray-300 hover:text-white hover:bg-white/5 hover-scale transition-all duration-200';
 
   return (
-    <Sidebar className="bg-gradient-to-b from-gray-900 to-black border-r border-gray-800">
-      <SidebarHeader className="p-6 border-b border-gray-800">
+    <Sidebar className="bg-black border-r border-gray-800 animate-slide-in-left">
+      <SidebarHeader className="p-6 border-b border-gray-800 animate-fade-in">
         <div className="flex flex-col">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-shimmer">
             KanYe Player
           </h1>
           {!isCollapsed && (
@@ -47,7 +47,7 @@ export function AppSidebar() {
               href="https://discord.gg/Vj3SkyRdzu" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors duration-200 mt-1"
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors duration-200 mt-1 hover-scale"
             >
               https://discord.gg/Vj3SkyRdzu
             </a>
@@ -55,17 +55,17 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-4">
+      <SidebarContent className="p-4 bg-black">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4">
+          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4 animate-fade-in">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
-              {navigationItems.map((item) => {
+              {navigationItems.map((item, index) => {
                 const isActive = location.pathname === item.url;
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.title} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                     <SidebarMenuButton asChild className="h-12 rounded-lg">
                       <NavLink 
                         to={item.url} 
@@ -76,7 +76,7 @@ export function AppSidebar() {
                           <span className="font-medium">{item.title}</span>
                         )}
                         {item.title === 'Liked Songs' && likedSongs.length > 0 && !isCollapsed && (
-                          <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse-soft">
                             {likedSongs.length}
                           </span>
                         )}
@@ -90,15 +90,15 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup className="mt-8">
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4">
+          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4 animate-fade-in">
             Admin
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
+              <SidebarMenuItem className="animate-fade-in">
                 <SidebarMenuButton 
                   onClick={openAdminPanel}
-                  className="h-12 rounded-lg flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200"
+                  className="h-12 rounded-lg flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 hover-scale transition-all duration-200"
                 >
                   <Settings className="w-5 h-5" />
                   {!isCollapsed && <span className="font-medium">Admin Panel</span>}
