@@ -96,9 +96,9 @@ export const MusicPlayer: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            {/* Track Info */}
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="grid grid-cols-3 items-center gap-4">
+            {/* Track Info - Left */}
+            <div className="flex items-center gap-4 min-w-0">
               <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex-shrink-0 shadow-lg hover:scale-105 transition-transform duration-200">
                 <img
                   src={currentTrack.coverUrl}
@@ -126,8 +126,8 @@ export const MusicPlayer: React.FC = () => {
               </Button>
             </div>
 
-            {/* Controls - Centered */}
-            <div className="flex items-center gap-4 flex-shrink-0 mx-8">
+            {/* Controls - Center */}
+            <div className="flex items-center justify-center gap-4">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -169,8 +169,8 @@ export const MusicPlayer: React.FC = () => {
               </Button>
             </div>
 
-            {/* Volume Control */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Volume Control - Right */}
+            <div className="flex items-center justify-end gap-3">
               <Volume2 className="w-4 h-4 text-gray-400" />
               <div className="w-24">
                 <Slider

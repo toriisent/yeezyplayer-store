@@ -35,12 +35,12 @@ const Index: React.FC = () => {
           </div>
         </section>
 
-        {/* Featured Releases */}
-        {featuredReleases.length > 0 && (
+        {/* All Releases */}
+        {releases.length > 0 && (
           <section className="animate-slide-in-right">
-            <h2 className="text-3xl font-bold mb-8 text-white">Featured Releases</h2>
+            <h2 className="text-3xl font-bold mb-8 text-white">All Releases</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {featuredReleases.map((release, index) => (
+              {releases.map((release, index) => (
                 <div 
                   key={release.id} 
                   className="animate-fade-in hover-scale"

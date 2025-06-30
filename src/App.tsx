@@ -8,7 +8,6 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import Index from "./pages/Index";
 import Search from "./pages/Search";
-import Releases from "./pages/Releases";
 import LikedSongs from "./pages/LikedSongs";
 import Stats from "./pages/Stats";
 import ReleaseDetail from "./pages/ReleaseDetail";
@@ -41,7 +40,6 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/search" element={<Search />} />
-                      <Route path="/releases" element={<Releases />} />
                       <Route path="/liked" element={<LikedSongs />} />
                       <Route path="/stats" element={<Stats />} />
                       <Route path="/release/:id" element={<ReleaseDetail />} />

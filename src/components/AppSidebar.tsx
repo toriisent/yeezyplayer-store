@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Heart, Music, Settings, BarChart } from 'lucide-react';
+import { Home, Search, Heart, Settings, BarChart } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +19,6 @@ import { useAdmin } from '../contexts/AdminContext';
 const navigationItems = [
   { title: 'Home', url: '/', icon: Home },
   { title: 'Search', url: '/search', icon: Search },
-  { title: 'Releases', url: '/releases', icon: Music },
   { title: 'Liked Songs', url: '/liked', icon: Heart },
   { title: 'Stats', url: '/stats', icon: BarChart },
 ];
@@ -47,7 +46,7 @@ export function AppSidebar() {
               href="https://discord.gg/Vj3SkyRdzu" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors duration-200 mt-1 hover-scale"
+              className="text-xs text-gray-400 hover:text-gray-300 transition-colors duration-200 mt-1 hover-scale"
             >
               https://discord.gg/Vj3SkyRdzu
             </a>
