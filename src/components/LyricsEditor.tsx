@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, Plus, Trash2, Save, Music, Clock } from 'lucide-react';
+import { X, Plus, Trash2, Save, Music, Clock, Sparkles } from 'lucide-react';
 import { LyricLine, Track } from '../contexts/MusicContext';
 import { useMusic } from '../contexts/MusicContext';
+import { supabase } from '../integrations/supabase/client';
 
 interface LyricsEditorProps {
   track: Track;
@@ -20,6 +21,7 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({ track, isOpen, onClo
   const [lyrics, setLyrics] = useState<LyricLine[]>(track.lyrics || []);
   const [bulkLyricsText, setBulkLyricsText] = useState('');
   const [isSimpleMode, setIsSimpleMode] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const addLyricLine = () => {
     setLyrics(prev => [...prev, {
@@ -87,6 +89,35 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({ track, isOpen, onClo
     setBulkLyricsText('');
   };
 
+  const analyzeWithAI = async () => {
+    if (!bulkLyricsText.trim()) {
+      alert('Please enter lyrics first');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-lyrics-timing', {
+        body: {
+          audioUrl: track.audioUrl,
+          lyrics: bulkLyricsText
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.timedLyrics) {
+        setLyrics(data.timedLyrics);
+        setBulkLyricsText('');
+      }
+    } catch (error) {
+      console.error('Error analyzing lyrics timing:', error);
+      alert('Failed to analyze lyrics timing. Please try the manual timing option.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const saveLyrics = () => {
     updateTrackLyrics(track.id, lyrics);
     onClose();
@@ -134,15 +165,37 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({ track, isOpen, onClo
                   placeholder="Paste your lyrics here, one line per verse..."
                   className="bg-black/50 border-gray-600 text-white min-h-[200px] focus:border-white/50"
                 />
-                <p className="text-xs text-gray-500">
-                  Timing will be auto-generated (4 seconds per line, 0.5 seconds per word)
-                </p>
               </div>
               
-              <Button onClick={parseSimpleLyrics} className="w-full bg-blue-600 hover:bg-blue-700">
-                <Music className="w-4 h-4 mr-2" />
-                Generate Timed Lyrics
-              </Button>
+              <div className="flex gap-4">
+                <Button 
+                  onClick={analyzeWithAI} 
+                  disabled={isAnalyzing}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      AI Auto-Time Lyrics
+                    </>
+                  )}
+                </Button>
+                
+                <Button onClick={parseSimpleLyrics} variant="outline" className="flex-1">
+                  <Music className="w-4 h-4 mr-2" />
+                  Manual Timing
+                </Button>
+              </div>
+              
+              <p className="text-xs text-gray-500">
+                AI timing analyzes your lyrics and creates realistic timing based on music patterns. 
+                Manual timing creates basic 4-second intervals.
+              </p>
             </div>
           ) : (
             <div className="space-y-4">

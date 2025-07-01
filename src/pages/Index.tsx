@@ -26,7 +26,7 @@ const Index: React.FC = () => {
     if (releaseList.length === 0) return null;
     
     return (
-      <section className="animate-slide-in-right">
+      <section className="animate-slide-in-right mb-16">
         <h2 className="text-3xl font-bold mb-8 text-white">{title}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {releaseList.map((release, index) => (
@@ -44,7 +44,7 @@ const Index: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-8 animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-8 pb-32 animate-fade-in">
       <div className="max-w-7xl mx-auto space-y-12">
         {/* All Releases */}
         {releases.length > 0 && renderReleaseSection("All Releases", releases)}

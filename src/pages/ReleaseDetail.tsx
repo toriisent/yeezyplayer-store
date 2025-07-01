@@ -106,7 +106,7 @@ const ReleaseDetail = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 pb-20">
         {/* Release Header */}
         <div className="flex flex-col lg:flex-row gap-8 mb-12">
           <div className="lg:w-1/3">
@@ -154,10 +154,12 @@ const ReleaseDetail = () => {
           </div>
         </div>
 
-        {/* Track List with Scroll Area */}
+        {/* Track List with Improved Scroll Area */}
         <div className="bg-black/30 backdrop-blur-sm rounded-lg border border-white/10 overflow-hidden">
-          <ScrollArea className="h-[60vh] p-6">
-            <TrackList tracks={release.tracks} />
+          <ScrollArea className="h-[70vh]">
+            <div className="p-6 pb-8">
+              <TrackList tracks={release.tracks} />
+            </div>
           </ScrollArea>
         </div>
       </div>
