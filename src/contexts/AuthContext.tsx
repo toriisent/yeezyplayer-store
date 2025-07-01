@@ -124,11 +124,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (profileData) {
           // Get the user's email from the auth.users table using a function
-          const { data: userData } = await supabase.rpc('get_user_email', {
-            user_id: profileData.id
+          const { data: userData, error: rpcError } = await supabase.functions.invoke('get-user-email', {
+            body: { user_id: profileData.id }
           });
 
-          if (userData) {
+          if (!rpcError && userData) {
             const { error: emailSignInError } = await supabase.auth.signInWithPassword({
               email: userData,
               password,

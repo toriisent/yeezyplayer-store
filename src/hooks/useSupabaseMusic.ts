@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -278,12 +279,13 @@ export const useSupabaseMusic = () => {
 
         if (error) throw error;
       } else {
-        // Like
+        // Like - include user_session as required by the table schema
         const { error } = await supabase
           .from('liked_songs')
           .insert({
             track_id: trackId,
-            user_id: user.id
+            user_id: user.id,
+            user_session: user.id // Using user.id as session identifier for now
           });
 
         if (error) throw error;

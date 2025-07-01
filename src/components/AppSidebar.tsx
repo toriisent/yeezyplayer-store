@@ -37,7 +37,7 @@ const items = [
 ]
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar()
+  const { state } = useSidebar()
   const { profile, signOut } = useAuth()
   const { toast } = useToast()
   const location = useLocation()
@@ -64,18 +64,17 @@ export function AppSidebar() {
     }
   }
 
+  const isCollapsed = state === "collapsed"
+
   return (
     <Sidebar
-      className={collapsed ? "w-14" : "w-60"}
-      collapsible
+      className={isCollapsed ? "w-14" : "w-60"}
+      collapsible="icon"
     >
       <SidebarTrigger className="m-2 self-end" />
 
       <SidebarContent>
-        <SidebarGroup
-          open={isExpanded}
-          onOpenChange={() => {}}
-        >
+        <SidebarGroup>
           <SidebarGroupLabel>Music Player</SidebarGroupLabel>
 
           <SidebarGroupContent>
@@ -85,7 +84,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -96,7 +95,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        {!collapsed && profile && (
+        {!isCollapsed && profile && (
           <div className="flex items-center gap-2 mb-2 p-2 bg-gray-800/50 rounded-lg">
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
@@ -115,7 +114,7 @@ export function AppSidebar() {
           onClick={handleSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          {!collapsed && <span>Sign Out</span>}
+          {!isCollapsed && <span>Sign Out</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
