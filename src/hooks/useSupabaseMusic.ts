@@ -1,21 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
 import { Release, Track, LyricLine } from '../contexts/MusicContext';
 
 export const useSupabaseMusic = () => {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Generate a unique session ID for tracking likes
-  const getSessionId = () => {
-    let sessionId = localStorage.getItem('kanye-player-session');
-    if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      localStorage.setItem('kanye-player-session', sessionId);
-    }
-    return sessionId;
-  };
+  const { user } = useAuth();
 
   const fetchReleases = async () => {
     try {
@@ -249,12 +240,13 @@ export const useSupabaseMusic = () => {
   };
 
   const getLikedSongs = async (): Promise<string[]> => {
+    if (!user) return [];
+    
     try {
-      const sessionId = getSessionId();
       const { data, error } = await supabase
         .from('liked_songs')
         .select('track_id')
-        .eq('user_session', sessionId);
+        .eq('user_id', user.id);
 
       if (error) throw error;
       return data?.map(item => item.track_id) || [];
@@ -265,15 +257,15 @@ export const useSupabaseMusic = () => {
   };
 
   const toggleLike = async (trackId: string) => {
+    if (!user) return;
+    
     try {
-      const sessionId = getSessionId();
-      
       // Check if already liked
       const { data: existing } = await supabase
         .from('liked_songs')
         .select('id')
         .eq('track_id', trackId)
-        .eq('user_session', sessionId)
+        .eq('user_id', user.id)
         .single();
 
       if (existing) {
@@ -282,7 +274,7 @@ export const useSupabaseMusic = () => {
           .from('liked_songs')
           .delete()
           .eq('track_id', trackId)
-          .eq('user_session', sessionId);
+          .eq('user_id', user.id);
 
         if (error) throw error;
       } else {
@@ -291,7 +283,7 @@ export const useSupabaseMusic = () => {
           .from('liked_songs')
           .insert({
             track_id: trackId,
-            user_session: sessionId
+            user_id: user.id
           });
 
         if (error) throw error;

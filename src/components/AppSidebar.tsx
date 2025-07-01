@@ -1,107 +1,123 @@
 
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Heart, Settings, BarChart } from 'lucide-react';
+import { useState } from "react"
+import { 
+  Home, 
+  Search, 
+  Heart, 
+  BarChart3, 
+  Music, 
+  Settings, 
+  LogOut, 
+  User
+} from "lucide-react"
+import { NavLink, useLocation } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
+
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
+  SidebarTrigger,
   useSidebar,
-} from '@/components/ui/sidebar';
-import { useAdmin } from '../contexts/AdminContext';
+} from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
-const navigationItems = [
-  { title: 'Home', url: '/', icon: Home },
-  { title: 'Search', url: '/search', icon: Search },
-  { title: 'Liked Songs', url: '/liked', icon: Heart },
-  { title: 'Stats', url: '/stats', icon: BarChart },
-];
+const items = [
+  { title: "Home", url: "/", icon: Home },
+  { title: "Search", url: "/search", icon: Search },
+  { title: "Liked Songs", url: "/liked", icon: Heart },
+  { title: "Statistics", url: "/stats", icon: BarChart3 },
+]
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const location = useLocation();
-  const { openAdminPanel } = useAdmin();
-  const isCollapsed = state === 'collapsed';
+  const { collapsed } = useSidebar()
+  const { profile, signOut } = useAuth()
+  const { toast } = useToast()
+  const location = useLocation()
+  const currentPath = location.pathname
 
-  const getNavClass = (isActive: boolean) =>
-    isActive 
-      ? 'bg-white/10 text-white font-medium border-r-2 border-white animate-fade-in' 
-      : 'text-gray-300 hover:text-white hover:bg-white/5 hover-scale transition-all duration-200';
+  const isActive = (path: string) => currentPath === path
+  const isExpanded = items.some((i) => isActive(i.url))
+  const getNavCls = ({ isActive }: { isActive: boolean }) =>
+    isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
 
   return (
-    <Sidebar className="bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-gray-800 animate-slide-in-left">
-      <SidebarHeader className="p-6 border-b border-gray-800 animate-fade-in bg-gradient-to-r from-gray-900 to-black">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-bold text-white animate-shimmer">
-            KanYe Player
-          </h1>
-          {!isCollapsed && (
-            <a 
-              href="https://discord.gg/Vj3SkyRdzu" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs text-gray-400 hover:text-gray-300 transition-colors duration-200 mt-1 hover-scale"
-            >
-              https://discord.gg/Vj3SkyRdzu
-            </a>
-          )}
-        </div>
-      </SidebarHeader>
+    <Sidebar
+      className={collapsed ? "w-14" : "w-60"}
+      collapsible
+    >
+      <SidebarTrigger className="m-2 self-end" />
 
-      <SidebarContent className="p-4 bg-gradient-to-b from-black to-gray-900">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4 animate-fade-in">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
-              {navigationItems.map((item, index) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-                    <SidebarMenuButton asChild className="h-12 rounded-lg">
-                      <NavLink 
-                        to={item.url} 
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${getNavClass(isActive)}`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        {!isCollapsed && (
-                          <span className="font-medium">{item.title}</span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent>
+        <SidebarGroup
+          open={isExpanded}
+          onOpenChange={() => {}}
+        >
+          <SidebarGroupLabel>Music Player</SidebarGroupLabel>
 
-        <SidebarGroup className="mt-8">
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-4 animate-fade-in">
-            Admin
-          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem className="animate-fade-in">
-                <SidebarMenuButton 
-                  onClick={openAdminPanel}
-                  className="h-12 rounded-lg flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 hover-scale transition-all duration-200"
-                >
-                  <Settings className="w-5 h-5" />
-                  {!isCollapsed && <span className="font-medium">Admin Panel</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end className={getNavCls}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-4">
+        {!collapsed && profile && (
+          <div className="flex items-center gap-2 mb-2 p-2 bg-gray-800/50 rounded-lg">
+            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {profile.username}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+          onClick={handleSignOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          {!collapsed && <span>Sign Out</span>}
+        </Button>
+      </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

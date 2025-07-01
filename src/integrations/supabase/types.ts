@@ -14,18 +14,21 @@ export type Database = {
           created_at: string
           id: string
           track_id: string
+          user_id: string | null
           user_session: string
         }
         Insert: {
           created_at?: string
           id?: string
           track_id: string
+          user_id?: string | null
           user_session: string
         }
         Update: {
           created_at?: string
           id?: string
           track_id?: string
+          user_id?: string | null
           user_session?: string
         }
         Relationships: [
@@ -104,6 +107,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      playlist_tracks: {
+        Row: {
+          added_at: string
+          id: string
+          playlist_id: string
+          track_id: string
+          track_order: number
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          playlist_id: string
+          track_id: string
+          track_order?: number
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          playlist_id?: string
+          track_id?: string
+          track_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_tracks_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
       }
       releases: {
         Row: {
