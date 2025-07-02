@@ -48,7 +48,7 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
+    `${isActive ? "bg-gray-800/50 text-white font-medium border border-white/20" : "hover:bg-gray-800/30 text-gray-300 hover:text-white"} transition-all duration-200 rounded-lg p-3`
 
   const handleSignOut = async () => {
     try {
@@ -107,13 +107,13 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-gray-400 mb-4">NAVIGATION</SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-2 px-2">
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="mr-3 h-5 w-5 text-gray-300" />
-                      {!isCollapsed && <span className="text-gray-300">{item.title}</span>}
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -127,15 +127,15 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-gray-400 mb-4">ADMIN</SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-2 px-2">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <button
                     onClick={openAdminPanel}
-                    className="flex items-center w-full text-left hover:bg-muted/50 p-2 rounded-md transition-colors"
+                    className="flex items-center w-full text-left hover:bg-gray-800/30 text-gray-300 hover:text-white transition-all duration-200 rounded-lg p-3"
                   >
-                    <Shield className="mr-3 h-5 w-5 text-gray-300" />
-                    {!isCollapsed && <span className="text-gray-300">Admin Panel</span>}
+                    <Shield className="mr-3 h-5 w-5" />
+                    {!isCollapsed && <span>Admin Panel</span>}
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>

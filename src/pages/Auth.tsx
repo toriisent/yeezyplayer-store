@@ -101,15 +101,15 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen kanye-gradient flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-800 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_50%)]"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_50%)]"></div>
       
-      <Card className="w-full max-w-md modern-card border-white/10 shadow-2xl backdrop-blur-xl relative z-10">
+      <Card className="w-full max-w-md bg-gray-900/90 border-gray-700 shadow-2xl backdrop-blur-xl relative z-10">
         <CardHeader className="text-center pb-8">
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 rounded-full overflow-hidden shadow-2xl glow-effect">
+            <div className="w-20 h-20 rounded-full overflow-hidden shadow-2xl">
               <img 
                 src="https://fwsnptiumwcikdrhkpme.supabase.co/storage/v1/object/public/songs/SignUp/Screenshot%202025-07-01%20072126.png"
                 alt="KanYe Player Logo"
@@ -117,7 +117,7 @@ const Auth: React.FC = () => {
               />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-white text-shadow mb-2">
+          <CardTitle className="text-3xl font-bold text-white mb-2">
             KanYe Player
           </CardTitle>
           <CardDescription className="text-gray-300 text-lg">
@@ -127,16 +127,16 @@ const Auth: React.FC = () => {
         
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-black/30 border border-white/10">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-800 border border-gray-600">
               <TabsTrigger 
                 value="login" 
-                className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-white/10 transition-all duration-300"
+                className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-700 transition-all duration-300"
               >
                 Login
               </TabsTrigger>
               <TabsTrigger 
                 value="signup" 
-                className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-white/10 transition-all duration-300"
+                className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-700 transition-all duration-300"
               >
                 Sign Up
               </TabsTrigger>
@@ -152,7 +152,7 @@ const Auth: React.FC = () => {
                       placeholder="Username or Email"
                       value={loginForm.emailOrUsername}
                       onChange={(e) => setLoginForm(prev => ({ ...prev, emailOrUsername: e.target.value }))}
-                      className="pl-11 h-12 bg-black/30 border-white/20 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20 backdrop-blur-sm"
+                      className="pl-11 h-12 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20"
                       required
                     />
                   </div>
@@ -166,7 +166,7 @@ const Auth: React.FC = () => {
                       placeholder="Password"
                       value={loginForm.password}
                       onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                      className="pl-11 pr-11 h-12 bg-black/30 border-white/20 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20 backdrop-blur-sm"
+                      className="pl-11 pr-11 h-12 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20"
                       required
                     />
                     <button
@@ -181,7 +181,7 @@ const Auth: React.FC = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold text-lg shadow-lg hover-scale transition-all duration-300"
+                  className="w-full h-12 bg-gray-700 hover:bg-gray-600 text-white font-semibold text-lg shadow-lg transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -206,7 +206,7 @@ const Auth: React.FC = () => {
                       placeholder="Username"
                       value={signupForm.username}
                       onChange={(e) => setSignupForm(prev => ({ ...prev, username: e.target.value }))}
-                      className="pl-11 h-12 bg-black/30 border-white/20 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20 backdrop-blur-sm"
+                      className="pl-11 h-12 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20"
                       required
                     />
                   </div>
@@ -220,7 +220,7 @@ const Auth: React.FC = () => {
                       placeholder="Email"
                       value={signupForm.email}
                       onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}
-                      className="pl-11 h-12 bg-black/30 border-white/20 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20 backdrop-blur-sm"
+                      className="pl-11 h-12 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20"
                       required
                     />
                   </div>
@@ -234,7 +234,7 @@ const Auth: React.FC = () => {
                       placeholder="Password"
                       value={signupForm.password}
                       onChange={(e) => setSignupForm(prev => ({ ...prev, password: e.target.value }))}
-                      className="pl-11 pr-11 h-12 bg-black/30 border-white/20 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20 backdrop-blur-sm"
+                      className="pl-11 pr-11 h-12 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20"
                       required
                     />
                     <button
@@ -249,7 +249,7 @@ const Auth: React.FC = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold text-lg shadow-lg hover-scale transition-all duration-300"
+                  className="w-full h-12 bg-gray-700 hover:bg-gray-600 text-white font-semibold text-lg shadow-lg transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? (
