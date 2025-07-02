@@ -44,7 +44,6 @@ export function AppSidebar() {
   const currentPath = location.pathname
 
   const isActive = (path: string) => currentPath === path
-  const isExpanded = items.some((i) => isActive(i.url))
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
 
@@ -68,14 +67,40 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-14" : "w-60"}
+      className={`${isCollapsed ? "w-14" : "w-60"} bg-gray-900 border-gray-800`}
       collapsible="icon"
     >
-      <SidebarTrigger className="m-2 self-end" />
+      <SidebarTrigger className="m-2 self-end text-white hover:bg-gray-800" />
 
-      <SidebarContent>
+      <SidebarContent className="bg-gray-900">
+        {/* KanYe Player Header */}
+        {!isCollapsed && (
+          <div className="px-4 py-6 border-b border-gray-800">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg">
+                <img 
+                  src="https://fwsnptiumwcikdrhkpme.supabase.co/storage/v1/object/public/songs/SignUp/Screenshot%202025-07-01%20072126.png"
+                  alt="KanYe Player"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h1 className="text-white font-bold text-lg">KanYe Player</h1>
+              </div>
+            </div>
+            <a 
+              href="https://discord.gg/Vj3SkyRdzu" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-purple-400 hover:text-purple-300 text-sm transition-colors underline"
+            >
+              Join our Discord
+            </a>
+          </div>
+        )}
+
         <SidebarGroup>
-          <SidebarGroupLabel>Music Player</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-gray-400">Music Player</SidebarGroupLabel>
 
           <SidebarGroupContent>
             <SidebarMenu>
@@ -83,8 +108,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <item.icon className="mr-2 h-4 w-4 text-gray-300" />
+                      {!isCollapsed && <span className="text-gray-300">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -94,7 +119,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 bg-gray-900 border-t border-gray-800">
         {!isCollapsed && profile && (
           <div className="flex items-center gap-2 mb-2 p-2 bg-gray-800/50 rounded-lg">
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
