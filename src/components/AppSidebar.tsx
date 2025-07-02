@@ -8,10 +8,12 @@ import {
   Music, 
   Settings, 
   LogOut, 
-  User
+  User,
+  Shield
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
+import { useAdmin } from "../contexts/AdminContext"
 
 import {
   Sidebar,
@@ -39,6 +41,7 @@ const items = [
 export function AppSidebar() {
   const { state } = useSidebar()
   const { profile, signOut } = useAuth()
+  const { openAdminPanel } = useAdmin()
   const { toast } = useToast()
   const location = useLocation()
   const currentPath = location.pathname
@@ -76,7 +79,7 @@ export function AppSidebar() {
         {/* KanYe Player Header */}
         {!isCollapsed && (
           <div className="px-4 py-6 border-b border-gray-800">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg">
                 <img 
                   src="https://fwsnptiumwcikdrhkpme.supabase.co/storage/v1/object/public/songs/SignUp/Screenshot%202025-07-01%20072126.png"
@@ -99,16 +102,17 @@ export function AppSidebar() {
           </div>
         )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400">Music Player</SidebarGroupLabel>
+        {/* Navigation Section */}
+        <SidebarGroup className="py-6">
+          <SidebarGroupLabel className="text-gray-400 mb-4">NAVIGATION</SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-2">
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="mr-2 h-4 w-4 text-gray-300" />
+                      <item.icon className="mr-3 h-5 w-5 text-gray-300" />
                       {!isCollapsed && <span className="text-gray-300">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -117,11 +121,32 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin Section */}
+        <SidebarGroup className="py-6">
+          <SidebarGroupLabel className="text-gray-400 mb-4">ADMIN</SidebarGroupLabel>
+
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-2">
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button
+                    onClick={openAdminPanel}
+                    className="flex items-center w-full text-left hover:bg-muted/50 p-2 rounded-md transition-colors"
+                  >
+                    <Shield className="mr-3 h-5 w-5 text-gray-300" />
+                    {!isCollapsed && <span className="text-gray-300">Admin Panel</span>}
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-4 bg-gray-900 border-t border-gray-800">
         {!isCollapsed && profile && (
-          <div className="flex items-center gap-2 mb-2 p-2 bg-gray-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-3 p-3 bg-gray-800/50 rounded-lg">
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
