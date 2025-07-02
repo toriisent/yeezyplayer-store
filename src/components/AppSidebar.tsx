@@ -48,7 +48,7 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    `${isActive ? "bg-gray-800/50 text-white font-medium border border-white/20" : "hover:bg-gray-800/30 text-gray-300 hover:text-white"} transition-all duration-200 rounded-lg p-3`
+    `${isActive ? "bg-black/50 text-white font-medium border border-white/30" : "hover:bg-black/20 text-gray-300 hover:text-white"} transition-all duration-200 rounded-lg p-4 text-base`
 
   const handleSignOut = async () => {
     try {
@@ -70,12 +70,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${isCollapsed ? "w-14" : "w-60"} bg-gray-900 border-gray-800`}
+      className={`${isCollapsed ? "w-14" : "w-60"} bg-black border-black min-h-screen`}
       collapsible="icon"
     >
-      <SidebarTrigger className="m-2 self-end text-white hover:bg-gray-800" />
+      <SidebarTrigger className="m-2 self-end text-white hover:bg-black/30" />
 
-      <SidebarContent className="bg-gray-900">
+      <SidebarContent className="bg-black">
         {/* KanYe Player Header */}
         {!isCollapsed && (
           <div className="px-4 py-6 border-b border-gray-800">
@@ -103,11 +103,11 @@ export function AppSidebar() {
         )}
 
         {/* Navigation Section */}
-        <SidebarGroup className="py-6">
-          <SidebarGroupLabel className="text-gray-400 mb-4">NAVIGATION</SidebarGroupLabel>
+        <SidebarGroup className="py-8">
+          <SidebarGroupLabel className="text-gray-400 mb-6 text-base font-semibold">NAVIGATION</SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-2">
+            <SidebarMenu className="space-y-4 px-2">
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
@@ -123,16 +123,16 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Admin Section */}
-        <SidebarGroup className="py-6">
-          <SidebarGroupLabel className="text-gray-400 mb-4">ADMIN</SidebarGroupLabel>
+        <SidebarGroup className="py-8">
+          <SidebarGroupLabel className="text-gray-400 mb-6 text-base font-semibold">ADMIN</SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-2">
+            <SidebarMenu className="space-y-4 px-2">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <button
                     onClick={openAdminPanel}
-                    className="flex items-center w-full text-left hover:bg-gray-800/30 text-gray-300 hover:text-white transition-all duration-200 rounded-lg p-3"
+                    className="flex items-center w-full text-left hover:bg-black/20 text-gray-300 hover:text-white transition-all duration-200 rounded-lg p-4 text-base"
                   >
                     <Shield className="mr-3 h-5 w-5" />
                     {!isCollapsed && <span>Admin Panel</span>}
@@ -144,9 +144,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 bg-gray-900 border-t border-gray-800">
+      <SidebarFooter className="p-4 bg-black border-t border-gray-800">
         {!isCollapsed && profile && (
-          <div className="flex items-center gap-2 mb-3 p-3 bg-gray-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-3 p-3 bg-black/50 rounded-lg">
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
@@ -160,7 +160,7 @@ export function AppSidebar() {
         
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+          className="w-full justify-start text-gray-300 hover:text-white hover:bg-black/30"
           onClick={handleSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
