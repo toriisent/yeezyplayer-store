@@ -7,12 +7,10 @@ import {
   BarChart3, 
   Music, 
   Settings, 
-  LogOut, 
   User,
   Shield
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
-import { useAuth } from "../contexts/AuthContext"
 import { useAdmin } from "../contexts/AdminContext"
 
 import {
@@ -28,41 +26,22 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
 
 const items = [
   { title: "Home", url: "/", icon: Home },
   { title: "Search", url: "/search", icon: Search },
   { title: "Liked Songs", url: "/liked", icon: Heart },
+  { title: "Profile", url: "/profile", icon: User },
   { title: "Stats", url: "/stats", icon: BarChart3 },
 ]
 
 export function AppSidebar() {
   const { state } = useSidebar()
-  const { profile, signOut } = useAuth()
   const { openAdminPanel } = useAdmin()
-  const { toast } = useToast()
   const location = useLocation()
   const currentPath = location.pathname
 
   const isActive = (path: string) => currentPath === path
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out."
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive"
-      })
-    }
-  }
 
   const isCollapsed = state === "collapsed"
 
@@ -138,30 +117,6 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarContent>
-
-      <SidebarFooter className="p-4 bg-gray-900 border-t border-gray-700">
-        {!isCollapsed && profile && (
-          <div className="flex items-center gap-3 mb-4 p-3 bg-gray-800 rounded-lg">
-            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {profile.username}
-              </p>
-            </div>
-          </div>
-        )}
-        
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-3 h-4 w-4" />
-          {!isCollapsed && <span>Sign Out</span>}
-        </Button>
-      </SidebarFooter>
     </Sidebar>
   )
 }

@@ -182,20 +182,29 @@ export type Database = {
       }
       profiles: {
         Row: {
+          background_image_url: string | null
+          bio: string | null
           created_at: string
           id: string
+          profile_picture_url: string | null
           updated_at: string
           username: string
         }
         Insert: {
+          background_image_url?: string | null
+          bio?: string | null
           created_at?: string
           id: string
+          profile_picture_url?: string | null
           updated_at?: string
           username: string
         }
         Update: {
+          background_image_url?: string | null
+          bio?: string | null
           created_at?: string
           id?: string
+          profile_picture_url?: string | null
           updated_at?: string
           username?: string
         }

@@ -257,8 +257,8 @@ export const useSupabaseMusic = () => {
     }
   };
 
-  const toggleLike = async (trackId: string) => {
-    if (!user) return;
+  const toggleLike = async (trackId: string): Promise<boolean> => {
+    if (!user) return false;
     
     try {
       // Check if already liked
@@ -278,20 +278,23 @@ export const useSupabaseMusic = () => {
           .eq('user_id', user.id);
 
         if (error) throw error;
+        return false; // Now unliked
       } else {
-        // Like - include user_session as required by the table schema
+        // Like
         const { error } = await supabase
           .from('liked_songs')
           .insert({
             track_id: trackId,
             user_id: user.id,
-            user_session: user.id // Using user.id as session identifier for now
+            user_session: user.id
           });
 
         if (error) throw error;
+        return true; // Now liked
       }
     } catch (error) {
       console.error('Error toggling like:', error);
+      throw error;
     }
   };
 

@@ -39,7 +39,7 @@ interface MusicContextType {
   loading: boolean;
   playTrack: (track: Track) => void;
   pauseTrack: () => void;
-  toggleLike: (trackId: string) => void;
+  toggleLike: (trackId: string) => Promise<void>;
   addRelease: (release: Release) => void;
   updateRelease: (release: Release) => void;
   deleteRelease: (releaseId: string) => void;
@@ -79,14 +79,18 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
     toggleLike: toggleLikeInDb
   } = useSupabaseMusic();
 
-  // Load liked songs on mount
+  // Load liked songs on mount and when user changes
   useEffect(() => {
     const loadLikedSongs = async () => {
-      const liked = await getLikedSongs();
-      setLikedSongs(liked);
+      try {
+        const liked = await getLikedSongs();
+        setLikedSongs(liked);
+      } catch (error) {
+        console.error('Error loading liked songs:', error);
+      }
     };
     loadLikedSongs();
-  }, []);
+  }, [getLikedSongs]);
 
   const playTrack = (track: Track) => {
     setCurrentTrack(track);
@@ -98,10 +102,27 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children }) => {
   };
 
   const toggleLike = async (trackId: string) => {
-    await toggleLikeInDb(trackId);
-    // Refresh liked songs
-    const liked = await getLikedSongs();
-    setLikedSongs(liked);
+    try {
+      // Optimistically update UI
+      const wasLiked = likedSongs.includes(trackId);
+      if (wasLiked) {
+        setLikedSongs(prev => prev.filter(id => id !== trackId));
+      } else {
+        setLikedSongs(prev => [...prev, trackId]);
+      }
+
+      // Update database
+      await toggleLikeInDb(trackId);
+      
+      // Refresh from database to ensure consistency
+      const updatedLikedSongs = await getLikedSongs();
+      setLikedSongs(updatedLikedSongs);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Revert optimistic update on error
+      const likedFromDb = await getLikedSongs();
+      setLikedSongs(likedFromDb);
+    }
   };
 
   const getAudioDuration = (url: string): Promise<number> => {

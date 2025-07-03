@@ -6,11 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
+import { UserProfile } from "./components/UserProfile";
 import Index from "./pages/Index";
 import Search from "./pages/Search";
 import LikedSongs from "./pages/LikedSongs";
 import Stats from "./pages/Stats";
 import ReleaseDetail from "./pages/ReleaseDetail";
+import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AdminProvider } from "./contexts/AdminContext";
@@ -40,8 +42,9 @@ const App = () => (
                         <AppSidebar />
                         
                         <div className="flex-1 flex flex-col">
-                          <header className="h-16 flex items-center px-6 bg-gray-900 border-b border-gray-700">
+                          <header className="h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-700">
                             <SidebarTrigger className="text-white hover:bg-gray-800 transition-colors duration-200" />
+                            <UserProfile />
                           </header>
                           
                           <main className="flex-1 overflow-auto bg-black">
@@ -49,6 +52,7 @@ const App = () => (
                               <Route path="/" element={<Index />} />
                               <Route path="/search" element={<Search />} />
                               <Route path="/liked" element={<LikedSongs />} />
+                              <Route path="/profile" element={<Profile />} />
                               <Route path="/stats" element={<Stats />} />
                               <Route path="/release/:id" element={<ReleaseDetail />} />
                               <Route path="*" element={<NotFound />} />
