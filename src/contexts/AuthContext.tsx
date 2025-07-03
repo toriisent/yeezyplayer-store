@@ -96,14 +96,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
-      // Check if email already exists
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const emailExists = existingUsers.users?.some(user => user.email === email);
-      
-      if (emailExists) {
-        return { error: { message: 'An account with this email already exists' } };
-      }
-
       // Check if username already exists
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -113,6 +105,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (existingProfile) {
         return { error: { message: 'Username already taken' } };
+      }
+
+      // Check if email already exists by trying to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummy-password' // This will fail but tell us if email exists
+      });
+
+      // If the error is not "Invalid login credentials", the email might already exist
+      if (signInError && !signInError.message.includes('Invalid login credentials')) {
+        return { error: { message: 'An account with this email already exists' } };
       }
 
       const { data, error } = await supabase.auth.signUp({
