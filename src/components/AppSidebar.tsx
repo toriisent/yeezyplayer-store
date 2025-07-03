@@ -35,7 +35,7 @@ const items = [
   { title: "Home", url: "/", icon: Home },
   { title: "Search", url: "/search", icon: Search },
   { title: "Liked Songs", url: "/liked", icon: Heart },
-  { title: "Statistics", url: "/stats", icon: BarChart3 },
+  { title: "Stats", url: "/stats", icon: BarChart3 },
 ]
 
 export function AppSidebar() {
@@ -47,8 +47,6 @@ export function AppSidebar() {
   const currentPath = location.pathname
 
   const isActive = (path: string) => currentPath === path
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    `${isActive ? "bg-black/50 text-white font-medium border border-white/30" : "hover:bg-black/20 text-gray-300 hover:text-white"} transition-all duration-200 rounded-lg p-4 text-base`
 
   const handleSignOut = async () => {
     try {
@@ -70,15 +68,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${isCollapsed ? "w-14" : "w-60"} bg-black border-black min-h-screen`}
+      className={`${isCollapsed ? "w-16" : "w-64"} bg-gray-900 border-r border-gray-700`}
       collapsible="icon"
     >
-      <SidebarTrigger className="m-2 self-end text-white hover:bg-black/30" />
-
-      <SidebarContent className="bg-black">
+      <SidebarContent className="bg-gray-900 h-full">
         {/* KanYe Player Header */}
         {!isCollapsed && (
-          <div className="px-4 py-6 border-b border-gray-800">
+          <div className="px-6 py-6 bg-gray-900">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg">
                 <img 
@@ -88,65 +84,64 @@ export function AppSidebar() {
                 />
               </div>
               <div>
-                <h1 className="text-white font-bold text-lg">KanYe Player</h1>
+                <h1 className="text-white font-bold text-xl">KanYe Player</h1>
               </div>
             </div>
             <a 
               href="https://discord.gg/Vj3SkyRdzu" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-purple-400 hover:text-purple-300 text-sm transition-colors underline"
+              className="text-blue-400 hover:text-blue-300 text-sm transition-colors underline"
             >
-              Join our Discord
+              https://discord.gg/Vj3SkyRdzu
             </a>
           </div>
         )}
 
         {/* Navigation Section */}
-        <SidebarGroup className="py-8">
-          <SidebarGroupLabel className="text-gray-400 mb-6 text-base font-semibold">NAVIGATION</SidebarGroupLabel>
-
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-4 px-2">
+        <div className="px-4 py-4">
+          <div className="mb-6">
+            <h2 className="text-gray-400 text-sm font-semibold mb-4 px-2">NAVIGATION</h2>
+            <div className="space-y-2">
               {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  end
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-all duration-200 ${
+                      isActive
+                        ? "bg-gray-800 text-white border border-white"
+                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && <span className="font-medium">{item.title}</span>}
+                </NavLink>
               ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            </div>
+          </div>
 
-        {/* Admin Section */}
-        <SidebarGroup className="py-8">
-          <SidebarGroupLabel className="text-gray-400 mb-6 text-base font-semibold">ADMIN</SidebarGroupLabel>
-
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-4 px-2">
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <button
-                    onClick={openAdminPanel}
-                    className="flex items-center w-full text-left hover:bg-black/20 text-gray-300 hover:text-white transition-all duration-200 rounded-lg p-4 text-base"
-                  >
-                    <Shield className="mr-3 h-5 w-5" />
-                    {!isCollapsed && <span>Admin Panel</span>}
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          {/* Admin Section */}
+          <div className="mb-6">
+            <h2 className="text-gray-400 text-sm font-semibold mb-4 px-2">ADMIN</h2>
+            <div className="space-y-2">
+              <button
+                onClick={openAdminPanel}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white w-full text-left"
+              >
+                <Shield className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && <span className="font-medium">Admin Panel</span>}
+              </button>
+            </div>
+          </div>
+        </div>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 bg-black border-t border-gray-800">
+      <SidebarFooter className="p-4 bg-gray-900 border-t border-gray-700">
         {!isCollapsed && profile && (
-          <div className="flex items-center gap-2 mb-3 p-3 bg-black/50 rounded-lg">
+          <div className="flex items-center gap-3 mb-4 p-3 bg-gray-800 rounded-lg">
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
@@ -160,10 +155,10 @@ export function AppSidebar() {
         
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-300 hover:text-white hover:bg-black/30"
+          className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
           onClick={handleSignOut}
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-3 h-4 w-4" />
           {!isCollapsed && <span>Sign Out</span>}
         </Button>
       </SidebarFooter>

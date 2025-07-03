@@ -40,11 +40,11 @@ const App = () => (
                         <AppSidebar />
                         
                         <div className="flex-1 flex flex-col">
-                          <header className="h-16 flex items-center px-6 bg-black border-b border-gray-800">
-                            <SidebarTrigger className="text-white hover:bg-white/10 transition-colors duration-200" />
+                          <header className="h-16 flex items-center px-6 bg-gray-900 border-b border-gray-700">
+                            <SidebarTrigger className="text-white hover:bg-gray-800 transition-colors duration-200" />
                           </header>
                           
-                          <main className="flex-1 overflow-auto">
+                          <main className="flex-1 overflow-auto bg-black">
                             <Routes>
                               <Route path="/" element={<Index />} />
                               <Route path="/search" element={<Search />} />
