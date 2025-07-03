@@ -1,6 +1,7 @@
 
-import React, { useState, useRef } from 'react';
-import { Camera, Save, User, Heart, Music } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Camera, User, Heart, Edit3, ExternalLink, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMusic } from '../contexts/MusicContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,27 +12,92 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TrackList } from '../components/TrackList';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface Profile {
+  id: string;
+  username: string;
+  bio?: string;
+  profile_picture_url?: string;
+  background_image_url?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const Profile: React.FC = () => {
-  const { profile, user } = useAuth();
-  const { releases, likedSongs } = useMusic();
+  const { username: urlUsername } = useParams<{ username: string }>();
+  const { profile: currentUserProfile, user } = useAuth();
+  const { releases } = useMusic();
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
+  
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [likedSongs, setLikedSongs] = useState<string[]>([]);
+  const [isEditingBio, setIsEditingBio] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    username: profile?.username || '',
-    bio: profile?.bio || '',
-  });
+  const [bioText, setBioText] = useState('');
   
   const profilePictureRef = useRef<HTMLInputElement>(null);
   const backgroundRef = useRef<HTMLInputElement>(null);
 
+  const isOwnProfile = !urlUsername || (currentUserProfile && urlUsername === currentUserProfile.username);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (isOwnProfile && currentUserProfile) {
+        setProfile(currentUserProfile);
+        setBioText(currentUserProfile.bio || '');
+        // Fetch own liked songs
+        try {
+          const { data: likedData } = await supabase
+            .from('liked_songs')
+            .select('track_id')
+            .eq('user_id', currentUserProfile.id);
+          
+          if (likedData) {
+            setLikedSongs(likedData.map(item => item.track_id));
+          }
+        } catch (error) {
+          console.error('Error fetching liked songs:', error);
+        }
+      } else if (urlUsername) {
+        // Fetch other user's profile
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', urlUsername)
+            .single();
+
+          if (profileError) throw profileError;
+          setProfile(profileData);
+          setBioText(profileData.bio || '');
+
+          // Fetch their liked songs
+          const { data: likedData, error: likedError } = await supabase
+            .from('liked_songs')
+            .select('track_id')
+            .eq('user_id', profileData.id);
+
+          if (likedError) throw likedError;
+          setLikedSongs(likedData.map(item => item.track_id));
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          navigate('/');
+        }
+      }
+    };
+
+    fetchProfileData();
+  }, [urlUsername, currentUserProfile, isOwnProfile, navigate]);
+
   const allTracks = releases.flatMap(release => release.tracks);
   const likedTracks = allTracks.filter(track => likedSongs.includes(track.id));
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
 
   const uploadImage = async (file: File, path: string): Promise<string> => {
     const fileExt = file.name.split('.').pop();
@@ -51,7 +117,7 @@ const Profile: React.FC = () => {
   };
 
   const handleImageUpload = async (file: File, type: 'profile' | 'background') => {
-    if (!user) return;
+    if (!user || !isOwnProfile) return;
     
     setLoading(true);
     try {
@@ -71,7 +137,7 @@ const Profile: React.FC = () => {
         description: `${type === 'profile' ? 'Profile picture' : 'Background image'} updated successfully!`
       });
       
-      window.location.reload(); // Refresh to show new image
+      window.location.reload();
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
@@ -84,33 +150,30 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!user) return;
+  const handleBioSave = async () => {
+    if (!user || !isOwnProfile) return;
     
     setLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({
-          username: formData.username,
-          bio: formData.bio,
-        })
+        .update({ bio: bioText })
         .eq('id', user.id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Profile updated successfully!"
+        description: "Bio updated successfully!"
       });
       
-      setIsEditing(false);
-      window.location.reload(); // Refresh to show changes
+      setIsEditingBio(false);
+      window.location.reload();
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating bio:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: "Failed to update bio. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -132,14 +195,16 @@ const Profile: React.FC = () => {
         }}
       >
         <div className="absolute inset-0 bg-black/40" />
-        <Button
-          onClick={() => backgroundRef.current?.click()}
-          className="absolute top-4 right-4 bg-black/50 hover:bg-black/70"
-          disabled={loading}
-        >
-          <Camera className="w-4 h-4 mr-2" />
-          Change Background
-        </Button>
+        {isOwnProfile && (
+          <Button
+            onClick={() => backgroundRef.current?.click()}
+            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70"
+            disabled={loading}
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            Change Background
+          </Button>
+        )}
         <input
           ref={backgroundRef}
           type="file"
@@ -165,13 +230,15 @@ const Profile: React.FC = () => {
                 <User className="w-12 h-12" />
               </AvatarFallback>
             </Avatar>
-            <Button
-              onClick={() => profilePictureRef.current?.click()}
-              className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              disabled={loading}
-            >
-              <Camera className="w-4 h-4" />
-            </Button>
+            {isOwnProfile && (
+              <Button
+                onClick={() => profilePictureRef.current?.click()}
+                className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-700"
+                disabled={loading}
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
+            )}
             <input
               ref={profilePictureRef}
               type="file"
@@ -179,35 +246,30 @@ const Profile: React.FC = () => {
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) handleImageUpload(file, 'profile');
+                if (file && isOwnProfile) handleImageUpload(file, 'profile');
               }}
             />
           </div>
           
           <div className="flex-1 pb-4">
-            {isEditing ? (
+            <h1 className="text-4xl font-bold mb-2">{profile.username}</h1>
+            
+            {isEditingBio ? (
               <div className="space-y-4">
-                <Input
-                  value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
-                  className="text-2xl font-bold bg-gray-800 border-gray-700 text-white"
-                  placeholder="Username"
-                />
                 <Textarea
-                  value={formData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  value={bioText}
+                  onChange={(e) => setBioText(e.target.value)}
                   className="bg-gray-800 border-gray-700 text-white resize-none"
                   placeholder="Tell us about yourself..."
                   rows={3}
                 />
                 <div className="flex gap-2">
-                  <Button onClick={handleSave} disabled={loading}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                  <Button onClick={handleBioSave} disabled={loading}>
+                    Save Bio
                   </Button>
                   <Button 
                     variant="outline" 
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => setIsEditingBio(false)}
                     className="border-gray-700 text-white hover:bg-gray-800"
                   >
                     Cancel
@@ -216,63 +278,74 @@ const Profile: React.FC = () => {
               </div>
             ) : (
               <div>
-                <h1 className="text-4xl font-bold mb-2">{profile.username}</h1>
                 <p className="text-gray-400 text-lg mb-4">
                   {profile.bio || "No bio added yet"}
                 </p>
-                <Button onClick={() => setIsEditing(true)} variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
-                  Edit Profile
-                </Button>
+                {isOwnProfile && (
+                  <Button 
+                    onClick={() => setIsEditingBio(true)} 
+                    variant="outline" 
+                    className="border-gray-700 text-white hover:bg-gray-800"
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit Bio
+                  </Button>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <Card className="bg-gray-900 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-500" />
-                Liked Songs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">{likedTracks.length}</div>
-              <p className="text-gray-400">songs in your collection</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-900 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Music className="w-5 h-5 text-blue-500" />
-                Total Tracks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">{allTracks.length}</div>
-              <p className="text-gray-400">tracks available</p>
-            </CardContent>
-          </Card>
+        {/* Discord Link */}
+        <div className="mb-8">
+          <a 
+            href="https://discord.gg/your-server" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Join Our Discord!
+          </a>
         </div>
 
         {/* Liked Songs Section */}
         <Card className="bg-gray-900 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-              Your Liked Songs
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                {isOwnProfile ? 'Your Liked Songs' : `${profile.username}'s Liked Songs`}
+              </div>
+              {likedTracks.length > 3 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      View All ({likedTracks.length})
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-gray-800 border-gray-700">
+                    <DropdownMenuItem asChild className="text-white hover:bg-gray-700">
+                      <Link to={`/profile/${profile.username}/likedsongs`}>
+                        View All Liked Songs
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {likedTracks.length > 0 ? (
-              <TrackList tracks={likedTracks} />
+              <TrackList tracks={likedTracks.slice(0, 3)} />
             ) : (
               <div className="text-center py-12">
                 <Heart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2 text-gray-400">No liked songs yet</h3>
-                <p className="text-gray-500">Start liking songs to see them here</p>
+                <p className="text-gray-500">
+                  {isOwnProfile ? 'Start liking songs to see them here' : `${profile.username} hasn't liked any songs yet`}
+                </p>
               </div>
             )}
           </CardContent>

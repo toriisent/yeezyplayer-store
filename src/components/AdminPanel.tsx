@@ -1,26 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useMusic } from '../contexts/MusicContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Trash2, Star, Shield, Music2, Upload, Music } from 'lucide-react';
+import { X, Plus, Trash2, Star, Shield, Music2, Upload, Music, UserX, Search } from 'lucide-react';
 import { Release, Track } from '../contexts/MusicContext';
 import { LyricsEditor } from './LyricsEditor';
+
+interface Profile {
+  id: string;
+  username: string;
+  bio?: string;
+  profile_picture_url?: string;
+  background_image_url?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const AdminPanel: React.FC = () => {
   const { isAdminPanelOpen, isAuthenticated, login, logout, closeAdminPanel } = useAdmin();
   const { releases, addRelease, deleteRelease, toggleFeatured, getAudioDuration } = useMusic();
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState<'login' | 'manage' | 'add'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'manage' | 'add' | 'users'>('login');
   const [lyricsEditor, setLyricsEditor] = useState<{ isOpen: boolean; track: Track | null }>({
     isOpen: false,
     track: null
   });
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [searchUsername, setSearchUsername] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState<Profile[]>([]);
 
   // Form state for adding releases
   const [newRelease, setNewRelease] = useState({
@@ -31,6 +45,68 @@ export const AdminPanel: React.FC = () => {
     artist: 'Kanye West',
     tracks: [{ title: '', duration: 0, audioUrl: '', artist: 'Kanye West' }]
   });
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [isAuthenticated, activeTab]);
+
+  useEffect(() => {
+    if (searchUsername) {
+      setFilteredUsers(users.filter(user => 
+        user.username.toLowerCase().includes(searchUsername.toLowerCase())
+      ));
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchUsername, users]);
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const banUser = async (userId: string, username: string) => {
+    if (!confirm(`Are you sure you want to ban ${username}? This will permanently delete their account.`)) {
+      return;
+    }
+
+    try {
+      // Delete user's profile and related data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      // Delete user from auth (this requires service role key)
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (authError) {
+        console.error('Error deleting auth user:', authError);
+        // Continue anyway as profile is deleted
+      }
+
+      // Refresh users list
+      fetchUsers();
+      
+      alert(`User ${username} has been banned successfully.`);
+    } catch (error) {
+      console.error('Error banning user:', error);
+      alert('Failed to ban user. Please try again.');
+    }
+  };
 
   const handleLogin = () => {
     if (login(password)) {
@@ -54,23 +130,20 @@ export const AdminPanel: React.FC = () => {
       return;
     }
 
-    // Auto-set release date if not provided
     const releaseDate = newRelease.releaseDate || new Date().toISOString().split('T')[0];
 
-    // Process tracks and get durations
     const processedTracks = await Promise.all(
       newRelease.tracks.map(async (track, index) => {
         let duration = track.duration;
         
-        // Auto-get duration from MP3 if not provided and audioUrl exists
         if (!duration && track.audioUrl) {
           try {
             duration = await getAudioDuration(track.audioUrl);
           } catch (error) {
-            duration = 180; // Default fallback
+            duration = 180;
           }
         } else if (!duration) {
-          duration = 180; // Default fallback
+          duration = 180;
         }
 
         return {
@@ -229,6 +302,17 @@ export const AdminPanel: React.FC = () => {
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Add Release
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('users')}
+                    className={`flex-1 hover-scale transition-all duration-200 ${
+                      activeTab === 'users' 
+                        ? 'bg-black text-white border border-white shadow-lg' 
+                        : 'bg-transparent text-gray-300 hover:text-white hover:bg-white/10 border border-transparent'
+                    }`}
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    Manage Users
                   </Button>
                   <Button 
                     onClick={handleLogout} 
@@ -485,6 +569,68 @@ export const AdminPanel: React.FC = () => {
                       <Upload className="w-5 h-5 mr-2" />
                       Add Release to Library
                     </Button>
+                  </div>
+                )}
+
+                {activeTab === 'users' && (
+                  <div className="space-y-6 animate-slide-in-right">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-2xl font-bold text-white">User Management</h3>
+                      <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
+                        {users.length} users
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search users by username..."
+                          value={searchUsername}
+                          onChange={(e) => setSearchUsername(e.target.value)}
+                          className="pl-10 bg-gray-800 border-gray-700 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {filteredUsers.map((user, index) => (
+                        <Card 
+                          key={user.id} 
+                          className="modern-card bg-gray-900/30 border-gray-700 hover:bg-gray-900/50 transition-all duration-200 animate-fade-in"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                                  <span className="text-white font-bold text-lg">
+                                    {user.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-white text-lg">@{user.username}</h4>
+                                  <p className="text-gray-400 text-sm">
+                                    {user.bio || 'No bio'}
+                                  </p>
+                                  <p className="text-gray-500 text-xs">
+                                    Joined {new Date(user.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                onClick={() => banUser(user.id, user.username)}
+                                className="bg-red-600/20 text-red-400 hover:text-red-300 hover:bg-red-600/30 border border-red-500/30 hover-scale transition-all duration-200"
+                                size="sm"
+                              >
+                                <UserX className="w-4 h-4 mr-2" />
+                                Ban User
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

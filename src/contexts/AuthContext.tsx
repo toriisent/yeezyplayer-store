@@ -95,58 +95,83 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signUp = async (email: string, password: string, username: string) => {
-    // Remove email confirmation requirement - users will be signed in immediately
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: username
-        }
+    try {
+      // Check if email already exists
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const emailExists = existingUsers.users?.some(user => user.email === email);
+      
+      if (emailExists) {
+        return { error: { message: 'An account with this email already exists' } };
       }
-    });
-    
-    console.log('Sign up result:', { data, error });
-    return { error };
+
+      // Check if username already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+
+      if (existingProfile) {
+        return { error: { message: 'Username already taken' } };
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username
+          }
+        }
+      });
+      
+      console.log('Sign up result:', { data, error });
+      return { error };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      return { error };
+    }
   };
 
   const signIn = async (emailOrUsername: string, password: string) => {
-    // First try signing in with email
-    let { error } = await supabase.auth.signInWithPassword({
-      email: emailOrUsername,
-      password,
-    });
-
-    // If that fails and it looks like a username, try to find the email
-    if (error && !emailOrUsername.includes('@')) {
-      try {
-        const { data: profileData } = await supabase
+    try {
+      let email = emailOrUsername;
+      
+      // If it doesn't contain @, treat it as username
+      if (!emailOrUsername.includes('@')) {
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id')
           .eq('username', emailOrUsername)
           .single();
 
-        if (profileData) {
-          // Get the user's email from auth.users using the edge function
-          const { data: userData, error: functionError } = await supabase.functions.invoke('get-user-email', {
-            body: { user_id: profileData.id }
-          });
-
-          if (!functionError && userData) {
-            const { error: emailSignInError } = await supabase.auth.signInWithPassword({
-              email: userData,
-              password,
-            });
-            error = emailSignInError;
-          }
+        if (profileError || !profileData) {
+          return { error: { message: 'Username not found' } };
         }
-      } catch (usernameError) {
-        console.error('Username lookup failed:', usernameError);
-      }
-    }
 
-    console.log('Sign in result:', { error });
-    return { error };
+        // Get the user's email from the auth.users table via edge function
+        const { data: userData, error: functionError } = await supabase.functions.invoke('get-user-email', {
+          body: { user_id: profileData.id }
+        });
+
+        if (functionError || !userData) {
+          return { error: { message: 'Failed to find user email' } };
+        }
+
+        email = userData;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log('Sign in result:', { error });
+      return { error };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {

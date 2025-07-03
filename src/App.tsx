@@ -13,6 +13,7 @@ import LikedSongs from "./pages/LikedSongs";
 import Stats from "./pages/Stats";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import Profile from "./pages/Profile";
+import UserLikedSongs from "./pages/UserLikedSongs";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AdminProvider } from "./contexts/AdminContext";
@@ -53,6 +54,8 @@ const App = () => (
                               <Route path="/search" element={<Search />} />
                               <Route path="/liked" element={<LikedSongs />} />
                               <Route path="/profile" element={<Profile />} />
+                              <Route path="/profile/:username" element={<Profile />} />
+                              <Route path="/profile/:username/likedsongs" element={<UserLikedSongs />} />
                               <Route path="/stats" element={<Stats />} />
                               <Route path="/release/:id" element={<ReleaseDetail />} />
                               <Route path="*" element={<NotFound />} />
