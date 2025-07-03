@@ -6,6 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 interface Profile {
   id: string;
   username: string;
+  bio?: string;
+  profile_picture_url?: string;
+  background_image_url?: string;
   created_at: string;
   updated_at: string;
 }
