@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Camera, User, Heart, Edit3, ExternalLink, ChevronDown } from 'lucide-react';
+import { Camera, User, Heart, Edit3, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMusic } from '../contexts/MusicContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,8 +150,23 @@ const Profile: React.FC = () => {
     }
   };
 
+  const validateBio = (bio: string): boolean => {
+    // Check if bio contains URLs
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([^\s]+\.[a-zA-Z]{2,})/g;
+    return !urlRegex.test(bio);
+  };
+
   const handleBioSave = async () => {
     if (!user || !isOwnProfile) return;
+    
+    if (!validateBio(bioText)) {
+      toast({
+        title: "Error",
+        description: "Bio cannot contain links or URLs.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setLoading(true);
     try {
@@ -260,7 +275,7 @@ const Profile: React.FC = () => {
                   value={bioText}
                   onChange={(e) => setBioText(e.target.value)}
                   className="bg-gray-800 border-gray-700 text-white resize-none"
-                  placeholder="Tell us about yourself..."
+                  placeholder="Tell us about yourself... (No links allowed)"
                   rows={3}
                 />
                 <div className="flex gap-2">
@@ -284,8 +299,7 @@ const Profile: React.FC = () => {
                 {isOwnProfile && (
                   <Button 
                     onClick={() => setIsEditingBio(true)} 
-                    variant="outline" 
-                    className="border-gray-700 text-white hover:bg-gray-800"
+                    className="bg-black text-white border border-gray-700 hover:bg-gray-900"
                   >
                     <Edit3 className="w-4 h-4 mr-2" />
                     Edit Bio
@@ -294,19 +308,6 @@ const Profile: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Discord Link */}
-        <div className="mb-8">
-          <a 
-            href="https://discord.gg/your-server" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Join Our Discord!
-          </a>
         </div>
 
         {/* Liked Songs Section */}
@@ -320,7 +321,10 @@ const Profile: React.FC = () => {
               {likedTracks.length > 3 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+                    <Button 
+                      className="bg-black text-white border border-gray-600 hover:bg-gray-900" 
+                      size="sm"
+                    >
                       <ChevronDown className="w-4 h-4 mr-2" />
                       View All ({likedTracks.length})
                     </Button>

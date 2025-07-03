@@ -36,7 +36,11 @@ export const UserProfile = () => {
   };
 
   const handleProfileClick = () => {
-    navigate('/profile');
+    if (profile?.username) {
+      navigate(`/profile/${profile.username}`);
+    } else {
+      navigate('/profile');
+    }
   };
 
   if (!profile) return null;

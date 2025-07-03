@@ -10,8 +10,9 @@ import {
   User,
   Shield
 } from "lucide-react"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useAdmin } from "../contexts/AdminContext"
+import { useAuth } from "../contexts/AuthContext"
 
 import {
   Sidebar,
@@ -27,23 +28,37 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-const items = [
-  { title: "Home", url: "/", icon: Home },
-  { title: "Search", url: "/search", icon: Search },
-  { title: "Liked Songs", url: "/liked", icon: Heart },
-  { title: "Profile", url: "/profile", icon: User },
-  { title: "Stats", url: "/stats", icon: BarChart3 },
-]
-
 export function AppSidebar() {
   const { state } = useSidebar()
   const { openAdminPanel } = useAdmin()
+  const { profile } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const currentPath = location.pathname
+
+  const items = [
+    { title: "Home", url: "/", icon: Home },
+    { title: "Search", url: "/search", icon: Search },
+    { title: "Liked Songs", url: "/liked", icon: Heart },
+    { 
+      title: "Profile", 
+      url: profile?.username ? `/profile/${profile.username}` : "/profile", 
+      icon: User 
+    },
+    { title: "Stats", url: "/stats", icon: BarChart3 },
+  ]
 
   const isActive = (path: string) => currentPath === path
 
   const isCollapsed = state === "collapsed"
+
+  const handleProfileClick = () => {
+    if (profile?.username) {
+      navigate(`/profile/${profile.username}`);
+    } else {
+      navigate('/profile');
+    }
+  };
 
   return (
     <Sidebar
@@ -83,21 +98,36 @@ export function AppSidebar() {
             <h2 className="text-gray-400 text-sm font-semibold mb-4 px-2">NAVIGATION</h2>
             <div className="space-y-2">
               {items.map((item) => (
-                <NavLink
-                  key={item.title}
-                  to={item.url}
-                  end
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-all duration-200 ${
-                      isActive
+                item.title === "Profile" ? (
+                  <button
+                    key={item.title}
+                    onClick={handleProfileClick}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-all duration-200 w-full text-left ${
+                      currentPath.startsWith('/profile')
                         ? "bg-gray-800 text-white border border-white"
                         : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    }`
-                  }
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span className="font-medium">{item.title}</span>}
-                </NavLink>
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="font-medium">{item.title}</span>}
+                  </button>
+                ) : (
+                  <NavLink
+                    key={item.title}
+                    to={item.url}
+                    end
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-all duration-200 ${
+                        isActive
+                          ? "bg-gray-800 text-white border border-white"
+                          : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                      }`
+                    }
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="font-medium">{item.title}</span>}
+                  </NavLink>
+                )
               ))}
             </div>
           </div>
