@@ -220,237 +220,267 @@ export const AdminPanel = () => {
   if (!isAdminPanelOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-700">
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-bold text-white">Admin Panel</h2>
+    <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-black rounded-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden border border-white/10 shadow-2xl animate-scale-in">
+        <div className="flex items-center justify-between p-8 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <Shield className="w-8 h-8 text-white" />
+            <h2 className="text-2xl font-bold text-white tracking-wide">Admin Control</h2>
           </div>
-          <Button onClick={closeAdminPanel} variant="ghost" size="sm">
-            <X className="w-4 h-4" />
-          </Button>
+          <button 
+            onClick={closeAdminPanel}
+            className="text-white/70 hover:text-white transition-all duration-300 hover:rotate-90 p-2 rounded-full hover:bg-white/5"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="p-8 overflow-y-auto max-h-[calc(95vh-100px)]">
           {!isAuthenticated ? (
-            <div className="max-w-md mx-auto">
-              <div className="text-center mb-6">
-                <ShieldCheck className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Admin Authentication</h3>
-                <p className="text-gray-400">Enter the admin password to continue</p>
+            <div className="max-w-md mx-auto animate-fade-in">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-soft">
+                  <ShieldCheck className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-semibold text-white mb-3 tracking-wide">Access Control</h3>
+                <p className="text-white/60 text-lg">Enter admin credentials to continue</p>
               </div>
-              <div className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Admin Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                  className="bg-gray-800 border-gray-700 text-white"
-                />
-                <Button onClick={handleLogin} className="w-full">
-                  Login
-                </Button>
+              <div className="space-y-6">
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="Admin Password"  
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300 text-lg"
+                  />
+                </div>
+                <button
+                  onClick={handleLogin}
+                  className="w-full py-4 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 text-lg tracking-wide"
+                >
+                  Authenticate
+                </button>
               </div>
             </div>
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 bg-gray-800">
-                <TabsTrigger value="releases" className="data-[state=active]:bg-purple-600">
-                  <Music className="w-4 h-4 mr-2" />
-                  Releases
-                </TabsTrigger>
-                <TabsTrigger value="tracks" className="data-[state=active]:bg-purple-600">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Tracks
-                </TabsTrigger>
-                <TabsTrigger value="users" className="data-[state=active]:bg-purple-600">
-                  <Users className="w-4 h-4 mr-2" />
-                  Manage Users
-                </TabsTrigger>
-              </TabsList>
+            <div className="animate-fade-in">
+              <div className="mb-8">
+                <div className="flex space-x-1 bg-white/5 rounded-xl p-1">
+                  {[
+                    { id: 'releases', icon: Music, label: 'Releases' },
+                    { id: 'tracks', icon: BarChart3, label: 'Tracks' },
+                    { id: 'users', icon: Users, label: 'Users' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-medium transition-all duration-300 ${
+                        activeTab === tab.id
+                          ? 'bg-white text-black shadow-lg'
+                          : 'text-white/70 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <tab.icon className="w-5 h-5" />
+                      <span className="text-lg">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              <TabsContent value="releases" className="space-y-6">
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white">Add New Release</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleReleaseSubmit} className="space-y-4">
-                      <Input
+              {activeTab === 'releases' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+                    <h3 className="text-xl font-semibold text-white mb-6 tracking-wide">Create New Release</h3>
+                    <form onSubmit={handleReleaseSubmit} className="space-y-6">
+                      <input
                         placeholder="Release Title"
                         value={releaseForm.title}
                         onChange={(e) => setReleaseForm({...releaseForm, title: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
                       <select
                         value={releaseForm.type}
                         onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value as 'single' | 'ep' | 'album'})}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       >
-                        <option value="single">Single</option>
-                        <option value="ep">EP</option>
-                        <option value="album">Album</option>
+                        <option value="single" className="bg-black">Single</option>
+                        <option value="ep" className="bg-black">EP</option>
+                        <option value="album" className="bg-black">Album</option>
                       </select>
-                      <Input
+                      <input
                         type="date"
                         value={releaseForm.releaseDate}
                         onChange={(e) => setReleaseForm({...releaseForm, releaseDate: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
-                      <Input
+                      <input
                         placeholder="Cover Image URL"
                         value={releaseForm.coverUrl}
                         onChange={(e) => setReleaseForm({...releaseForm, coverUrl: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
-                      <Button type="submit" className="w-full">Add Release</Button>
+                      <button
+                        type="submit"
+                        className="w-full py-4 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 tracking-wide"
+                      >
+                        Create Release
+                      </button>
                     </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  </div>
+                </div>
+              )}
 
-              <TabsContent value="tracks" className="space-y-6">
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white">Add New Track</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleTrackSubmit} className="space-y-4">
+              {activeTab === 'tracks' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+                    <h3 className="text-xl font-semibold text-white mb-6 tracking-wide">Add New Track</h3>
+                    <form onSubmit={handleTrackSubmit} className="space-y-6">
                       <select
                         value={trackForm.releaseId}
                         onChange={(e) => setTrackForm({...trackForm, releaseId: e.target.value})}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       >
-                        <option value="">Select Release</option>
+                        <option value="" className="bg-black">Select Release</option>
                         {releases.map(release => (
-                          <option key={release.id} value={release.id}>{release.title}</option>
+                          <option key={release.id} value={release.id} className="bg-black">{release.title}</option>
                         ))}
                       </select>
-                      <Input
+                      <input
                         placeholder="Track Title"
                         value={trackForm.title}
                         onChange={(e) => setTrackForm({...trackForm, title: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
-                      <Input
+                      <input
                         placeholder="Artist"
                         value={trackForm.artist}
                         onChange={(e) => setTrackForm({...trackForm, artist: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
-                      <Input
+                      <input
                         placeholder="Audio URL"
                         value={trackForm.audioUrl}
                         onChange={(e) => setTrackForm({...trackForm, audioUrl: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
-                      <Input
+                      <input
                         placeholder="Cover Image URL"
                         value={trackForm.coverUrl}
                         onChange={(e) => setTrackForm({...trackForm, coverUrl: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                         required
                       />
-                      <Input
-                        type="number"
-                        placeholder="Duration (seconds)"
-                        value={trackForm.duration}
-                        onChange={(e) => setTrackForm({...trackForm, duration: parseInt(e.target.value)})}
-                        className="bg-gray-700 border-gray-600 text-white"
-                        required
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Track Order"
-                        value={trackForm.trackOrder}
-                        onChange={(e) => setTrackForm({...trackForm, trackOrder: parseInt(e.target.value)})}
-                        className="bg-gray-700 border-gray-600 text-white"
-                        required
-                      />
-                      <Button type="submit" className="w-full">Add Track</Button>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          type="number"
+                          placeholder="Duration (seconds)"
+                          value={trackForm.duration}
+                          onChange={(e) => setTrackForm({...trackForm, duration: parseInt(e.target.value)})}
+                          className="px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
+                          required
+                        />
+                        <input
+                          type="number"
+                          placeholder="Track Order"
+                          value={trackForm.trackOrder}
+                          onChange={(e) => setTrackForm({...trackForm, trackOrder: parseInt(e.target.value)})}
+                          className="px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-4 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 tracking-wide"
+                      >
+                        Add Track
+                      </button>
                     </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  </div>
+                </div>
+              )}
 
-              <TabsContent value="users" className="space-y-6">
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center justify-between">
-                      User Management
-                      <Button onClick={fetchUsers} variant="outline" size="sm">
+              {activeTab === 'users' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-white tracking-wide">User Management</h3>
+                      <button
+                        onClick={fetchUsers}
+                        className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20"
+                      >
                         Refresh
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Input
+                      </button>
+                    </div>
+                    <input
                       placeholder="Search users by username..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white mb-4"
+                      className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300 mb-6"
                     />
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
                       {filteredUsers.map((user) => (
                         <div
                           key={user.id}
-                          className="flex items-center justify-between p-3 bg-gray-700 rounded-lg"
+                          className="flex items-center justify-between p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
                         >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="h-12 w-12 border border-white/20">
                               <AvatarImage 
                                 src={user.profile_picture_url || undefined} 
                                 alt={user.username} 
                               />
-                              <AvatarFallback className="bg-purple-600 text-white">
+                              <AvatarFallback className="bg-white/10 text-white border-0">
                                 {user.username.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-white font-medium">{user.username}</p>
-                              <p className="text-gray-400 text-sm">
+                              <p className="text-white font-medium text-lg">{user.username}</p>
+                              <p className="text-white/60">
                                 Joined: {new Date(user.created_at).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
-                          <Button
+                          <button
                             onClick={() => banUser(user.id, user.username)}
                             disabled={isLoading}
-                            variant="destructive"
-                            size="sm"
+                            className="flex items-center gap-2 px-6 py-3 bg-red-500/20 text-red-400 font-medium rounded-xl border border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50 hover:text-red-300 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
                           >
-                            <Trash2 className="w-4 h-4 mr-2" />
+                            <Trash2 className="w-4 h-4" />
                             Ban User
-                          </Button>
+                          </button>
                         </div>
                       ))}
                       {filteredUsers.length === 0 && (
-                        <div className="text-center py-8 text-gray-400">
-                          No users found
+                        <div className="text-center py-12 text-white/40">
+                          <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                          <p className="text-lg">No users found</p>
                         </div>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {isAuthenticated && (
-            <div className="flex justify-end mt-6 pt-6 border-t border-gray-700">
-              <Button onClick={logout} variant="outline">
-                Logout
-              </Button>
+            <div className="flex justify-end mt-8 pt-8 border-t border-white/10">
+              <button
+                onClick={logout}
+                className="px-8 py-3 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 tracking-wide"
+              >
+                Sign Out
+              </button>
             </div>
           )}
         </div>
