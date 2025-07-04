@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Shield, ShieldCheck, Music, BarChart3, Users, Trash2 } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
@@ -23,18 +24,19 @@ interface Profile {
 
 export const AdminPanel = () => {
   const { isAuthenticated, isAdminPanelOpen, login, logout, closeAdminPanel } = useAdmin();
-  const { addRelease, addTrack, releases } = useMusic();
+  const { addRelease, releases } = useMusic();
   const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('releases');
   const [users, setUsers] = useState<Profile[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Form state for adding releases
   const [releaseForm, setReleaseForm] = useState({
     title: '',
-    type: 'Single',
+    type: 'single' as 'single' | 'ep' | 'album',
     releaseDate: '',
     coverUrl: ''
   });
@@ -153,13 +155,15 @@ export const AdminPanel = () => {
     e.preventDefault();
     try {
       await addRelease({
+        id: '',
         title: releaseForm.title,
         type: releaseForm.type,
-        release_date: releaseForm.releaseDate,
-        cover_url: releaseForm.coverUrl,
-        is_featured: false
+        coverUrl: releaseForm.coverUrl,
+        releaseDate: releaseForm.releaseDate,
+        tracks: [],
+        isFeatured: false
       });
-      setReleaseForm({ title: '', type: 'Single', releaseDate: '', coverUrl: '' });
+      setReleaseForm({ title: '', type: 'single', releaseDate: '', coverUrl: '' });
       toast({
         title: "Success",
         description: "Release added successfully"
@@ -176,15 +180,21 @@ export const AdminPanel = () => {
   const handleTrackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addTrack({
-        release_id: trackForm.releaseId,
-        title: trackForm.title,
-        artist: trackForm.artist,
-        audio_url: trackForm.audioUrl,
-        cover_url: trackForm.coverUrl,
-        duration: trackForm.duration,
-        track_order: trackForm.trackOrder
-      });
+      // Since addTrack doesn't exist in MusicContext, we'll add tracks directly to the database
+      const { error } = await supabase
+        .from('tracks')
+        .insert({
+          release_id: trackForm.releaseId,
+          title: trackForm.title,
+          artist: trackForm.artist,
+          audio_url: trackForm.audioUrl,
+          cover_url: trackForm.coverUrl,
+          duration: trackForm.duration,
+          track_order: trackForm.trackOrder
+        });
+
+      if (error) throw error;
+
       setTrackForm({
         releaseId: '',
         title: '',
@@ -206,10 +216,6 @@ export const AdminPanel = () => {
       });
     }
   };
-
-  const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (!isAdminPanelOpen) return null;
 
@@ -266,7 +272,6 @@ export const AdminPanel = () => {
               </TabsList>
 
               <TabsContent value="releases" className="space-y-6">
-                {/* Form for adding releases */}
                 <Card className="bg-gray-800 border-gray-700">
                   <CardHeader>
                     <CardTitle className="text-white">Add New Release</CardTitle>
@@ -282,13 +287,13 @@ export const AdminPanel = () => {
                       />
                       <select
                         value={releaseForm.type}
-                        onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value})}
+                        onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value as 'single' | 'ep' | 'album'})}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
                         required
                       >
-                        <option value="Single">Single</option>
-                        <option value="EP">EP</option>
-                        <option value="Album">Album</option>
+                        <option value="single">Single</option>
+                        <option value="ep">EP</option>
+                        <option value="album">Album</option>
                       </select>
                       <Input
                         type="date"
@@ -311,7 +316,6 @@ export const AdminPanel = () => {
               </TabsContent>
 
               <TabsContent value="tracks" className="space-y-6">
-                {/* Form for adding tracks */}
                 <Card className="bg-gray-800 border-gray-700">
                   <CardHeader>
                     <CardTitle className="text-white">Add New Track</CardTitle>
