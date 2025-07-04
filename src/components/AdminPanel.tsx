@@ -83,6 +83,7 @@ export const AdminPanel = () => {
   const banUser = async (userId: string, username: string) => {
     setIsLoading(true);
     try {
+      // Simply delete the user's profile from the profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -90,6 +91,7 @@ export const AdminPanel = () => {
 
       if (profileError) throw profileError;
 
+      // Also clean up their liked songs and playlists
       await supabase
         .from('liked_songs')
         .delete()
@@ -100,15 +102,9 @@ export const AdminPanel = () => {
         .delete()
         .eq('user_id', userId);
 
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-      
-      if (deleteError) {
-        console.log('Auth deletion failed, but profile was removed:', deleteError);
-      }
-
       toast({
         title: "Success",
-        description: `User ${username} has been banned and their account deleted`
+        description: `User ${username} has been banned and their data removed`
       });
 
       fetchUsers();

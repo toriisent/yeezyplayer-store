@@ -132,12 +132,13 @@ const Profile: React.FC = () => {
 
       if (error) throw error;
 
+      // Update local state instead of reloading
+      setProfile(prev => prev ? { ...prev, [updateField]: imageUrl } : null);
+
       toast({
         title: "Success",
         description: `${type === 'profile' ? 'Profile picture' : 'Background image'} updated successfully!`
       });
-      
-      window.location.reload();
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
@@ -177,13 +178,15 @@ const Profile: React.FC = () => {
 
       if (error) throw error;
 
+      // Update local state instead of reloading
+      setProfile(prev => prev ? { ...prev, bio: bioText } : null);
+
       toast({
         title: "Success",
         description: "Bio updated successfully!"
       });
       
       setIsEditingBio(false);
-      window.location.reload();
     } catch (error) {
       console.error('Error updating bio:', error);
       toast({
@@ -223,7 +226,7 @@ const Profile: React.FC = () => {
         <input
           ref={backgroundRef}
           type="file"
-          accept="image/*"
+          accept="image/*,image/gif"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -257,7 +260,7 @@ const Profile: React.FC = () => {
             <input
               ref={profilePictureRef}
               type="file"
-              accept="image/*"
+              accept="image/*,image/gif"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
