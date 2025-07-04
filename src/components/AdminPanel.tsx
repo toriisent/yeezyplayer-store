@@ -1,14 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Shield, ShieldCheck, Music, BarChart3, Users, Trash2 } from 'lucide-react';
+import { X, Shield, Music, BarChart3, Users, Trash2, Star, Plus, Mic } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useMusic } from '../contexts/MusicContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,7 +84,6 @@ export const AdminPanel = () => {
   const banUser = async (userId: string, username: string) => {
     setIsLoading(true);
     try {
-      // Delete the user's profile and all associated data
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -97,19 +91,16 @@ export const AdminPanel = () => {
 
       if (profileError) throw profileError;
 
-      // Delete user's liked songs
       await supabase
         .from('liked_songs')
         .delete()
         .eq('user_id', userId);
 
-      // Delete user's playlists
       await supabase
         .from('playlists')
         .delete()
         .eq('user_id', userId);
 
-      // Delete the user from auth (this will cascade to other tables)
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
       
       if (deleteError) {
@@ -121,7 +112,6 @@ export const AdminPanel = () => {
         description: `User ${username} has been banned and their account deleted`
       });
 
-      // Refresh the users list
       fetchUsers();
     } catch (error) {
       console.error('Error banning user:', error);
@@ -180,7 +170,6 @@ export const AdminPanel = () => {
   const handleTrackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Since addTrack doesn't exist in MusicContext, we'll add tracks directly to the database
       const { error } = await supabase
         .from('tracks')
         .insert({
@@ -220,267 +209,340 @@ export const AdminPanel = () => {
   if (!isAdminPanelOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-black rounded-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden border border-white/10 shadow-2xl animate-scale-in">
-        <div className="flex items-center justify-between p-8 border-b border-white/10">
+    <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-start justify-center p-4">
+      <div className="bg-[#1a1a1a] rounded-xl w-full max-w-6xl max-h-[95vh] overflow-hidden border border-gray-800 shadow-2xl mt-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-800">
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-white" />
-            <h2 className="text-2xl font-bold text-white tracking-wide">Admin Control</h2>
+            <Shield className="w-6 h-6 text-white" />
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                {!isAuthenticated ? 'Admin Access' : 'Admin Panel'}
+              </h2>
+              <p className="text-sm text-gray-400">Manage your music collection</p>
+            </div>
           </div>
           <button 
             onClick={closeAdminPanel}
-            className="text-white/70 hover:text-white transition-all duration-300 hover:rotate-90 p-2 rounded-full hover:bg-white/5"
+            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-8 overflow-y-auto max-h-[calc(95vh-100px)]">
+        <div className="overflow-y-auto max-h-[calc(95vh-80px)]">
           {!isAuthenticated ? (
-            <div className="max-w-md mx-auto animate-fade-in">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-soft">
-                  <ShieldCheck className="w-10 h-10 text-white" />
+            /* Login Screen */
+            <div className="flex items-center justify-center min-h-[500px] p-8">
+              <div className="bg-[#2a2a2a] rounded-xl p-8 w-full max-w-md border border-gray-700">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-600">
+                    <Shield className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Secure Access Required</h3>
+                  <p className="text-gray-400">Enter your admin credentials to continue</p>
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-3 tracking-wide">Access Control</h3>
-                <p className="text-white/60 text-lg">Enter admin credentials to continue</p>
-              </div>
-              <div className="space-y-6">
-                <div className="relative">
-                  <input
-                    type="password"
-                    placeholder="Admin Password"  
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300 text-lg"
-                  />
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Password</label>
+                    <input
+                      type="password"
+                      placeholder="Enter admin password..."
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                      className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={handleLogin}
+                    className="w-full py-3 bg-black text-white font-medium rounded-lg border border-gray-600 hover:border-white transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Access Admin Panel
+                  </button>
                 </div>
-                <button
-                  onClick={handleLogin}
-                  className="w-full py-4 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 text-lg tracking-wide"
-                >
-                  Authenticate
-                </button>
               </div>
             </div>
           ) : (
-            <div className="animate-fade-in">
-              <div className="mb-8">
-                <div className="flex space-x-1 bg-white/5 rounded-xl p-1">
-                  {[
-                    { id: 'releases', icon: Music, label: 'Releases' },
-                    { id: 'tracks', icon: BarChart3, label: 'Tracks' },
-                    { id: 'users', icon: Users, label: 'Users' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-medium transition-all duration-300 ${
-                        activeTab === tab.id
-                          ? 'bg-white text-black shadow-lg'
-                          : 'text-white/70 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      <tab.icon className="w-5 h-5" />
-                      <span className="text-lg">{tab.label}</span>
-                    </button>
-                  ))}
+            /* Admin Panel Content */
+            <div className="p-6">
+              {/* Navigation */}
+              <div className="flex gap-4 mb-8">
+                <button
+                  onClick={() => setActiveTab('releases')}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-lg border transition-all duration-200 ${
+                    activeTab === 'releases' 
+                      ? 'bg-black text-white border-white' 
+                      : 'bg-[#2a2a2a] text-gray-300 border-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  <Music className="w-4 h-4" />
+                  Manage Releases
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-lg border transition-all duration-200 ${
+                    activeTab === 'users' 
+                      ? 'bg-black text-white border-white' 
+                      : 'bg-[#2a2a2a] text-gray-300 border-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  Users
+                </button>
+
+                <div className="ml-auto flex items-center gap-4">
+                  <button
+                    onClick={() => setActiveTab('add-release')}
+                    className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg border border-white hover:bg-gray-900 transition-all duration-200"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Release
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="text-red-400 hover:text-red-300 font-medium transition-colors"
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
 
+              {/* Content */}
               {activeTab === 'releases' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
-                    <h3 className="text-xl font-semibold text-white mb-6 tracking-wide">Create New Release</h3>
-                    <form onSubmit={handleReleaseSubmit} className="space-y-6">
-                      <input
-                        placeholder="Release Title"
-                        value={releaseForm.title}
-                        onChange={(e) => setReleaseForm({...releaseForm, title: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <select
-                        value={releaseForm.type}
-                        onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value as 'single' | 'ep' | 'album'})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      >
-                        <option value="single" className="bg-black">Single</option>
-                        <option value="ep" className="bg-black">EP</option>
-                        <option value="album" className="bg-black">Album</option>
-                      </select>
-                      <input
-                        type="date"
-                        value={releaseForm.releaseDate}
-                        onChange={(e) => setReleaseForm({...releaseForm, releaseDate: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <input
-                        placeholder="Cover Image URL"
-                        value={releaseForm.coverUrl}
-                        onChange={(e) => setReleaseForm({...releaseForm, coverUrl: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <button
-                        type="submit"
-                        className="w-full py-4 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 tracking-wide"
-                      >
-                        Create Release
-                      </button>
-                    </form>
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-white">Music Library</h3>
+                    <span className="text-sm text-gray-400 bg-[#2a2a2a] px-3 py-1 rounded-full">
+                      {releases.length} releases
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {releases.map((release) => (
+                      <div key={release.id} className="bg-[#2a2a2a] rounded-xl p-6 border border-gray-700">
+                        <div className="flex items-start gap-4">
+                          <img 
+                            src={release.coverUrl} 
+                            alt={release.title}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-semibold text-white">{release.title}</h4>
+                              <div className="flex items-center gap-2">
+                                <Star className="w-4 h-4 text-gray-400 hover:text-yellow-400 cursor-pointer transition-colors" />
+                                <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400 cursor-pointer transition-colors" />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+                              <span className="bg-[#1a1a1a] px-2 py-1 rounded capitalize">{release.type}</span>
+                              <span>{release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}</span>
+                              <span>{release.releaseDate}</span>
+                            </div>
+                            
+                            {release.tracks.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-300 mb-2">Tracks</h5>
+                                {release.tracks.map((track, index) => (
+                                  <div key={track.id} className="flex items-center justify-between py-2 text-sm">
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-gray-500 w-6">{index + 1}</span>
+                                      <div>
+                                        <div className="text-white font-medium">{track.title}</div>
+                                        <div className="text-gray-400">{track.artist}</div>
+                                      </div>
+                                    </div>
+                                    <button className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">
+                                      <Mic className="w-3 h-3" />
+                                      Add Lyrics
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {activeTab === 'tracks' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
-                    <h3 className="text-xl font-semibold text-white mb-6 tracking-wide">Add New Track</h3>
-                    <form onSubmit={handleTrackSubmit} className="space-y-6">
-                      <select
-                        value={trackForm.releaseId}
-                        onChange={(e) => setTrackForm({...trackForm, releaseId: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      >
-                        <option value="" className="bg-black">Select Release</option>
-                        {releases.map(release => (
-                          <option key={release.id} value={release.id} className="bg-black">{release.title}</option>
-                        ))}
-                      </select>
-                      <input
-                        placeholder="Track Title"
-                        value={trackForm.title}
-                        onChange={(e) => setTrackForm({...trackForm, title: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <input
-                        placeholder="Artist"
-                        value={trackForm.artist}
-                        onChange={(e) => setTrackForm({...trackForm, artist: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <input
-                        placeholder="Audio URL"
-                        value={trackForm.audioUrl}
-                        onChange={(e) => setTrackForm({...trackForm, audioUrl: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <input
-                        placeholder="Cover Image URL"
-                        value={trackForm.coverUrl}
-                        onChange={(e) => setTrackForm({...trackForm, coverUrl: e.target.value})}
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-4">
+              {activeTab === 'add-release' && (
+                <div className="max-w-4xl mx-auto">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-bold text-white mb-2">Add New Release</h3>
+                    <p className="text-gray-400">Upload a new album, EP, or single</p>
+                  </div>
+
+                  <form onSubmit={handleReleaseSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">Release Title</label>
                         <input
-                          type="number"
-                          placeholder="Duration (seconds)"
-                          value={trackForm.duration}
-                          onChange={(e) => setTrackForm({...trackForm, duration: parseInt(e.target.value)})}
-                          className="px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
-                          required
-                        />
-                        <input
-                          type="number"
-                          placeholder="Track Order"
-                          value={trackForm.trackOrder}
-                          onChange={(e) => setTrackForm({...trackForm, trackOrder: parseInt(e.target.value)})}
-                          className="px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
+                          placeholder="Enter release title..."
+                          value={releaseForm.title}
+                          onChange={(e) => setReleaseForm({...releaseForm, title: e.target.value})}
+                          className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
                           required
                         />
                       </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">Artist Name</label>
+                        <input
+                          placeholder="Kanye West"
+                          value="Kanye West"
+                          className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          readOnly
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">Release Type</label>
+                        <select
+                          value={releaseForm.type}
+                          onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value as 'single' | 'ep' | 'album'})}
+                          className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          required
+                        >
+                          <option value="single">Single</option>
+                          <option value="ep">EP</option>
+                          <option value="album">Album</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">Cover Image URL</label>
+                        <input
+                          placeholder="https://example.com/cover.jpg"
+                          value={releaseForm.coverUrl}
+                          onChange={(e) => setReleaseForm({...releaseForm, coverUrl: e.target.value})}
+                          className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">Release Date (optional)</label>
+                        <input
+                          type="text"
+                          placeholder="dd/mm/yyyy"
+                          value={releaseForm.releaseDate}
+                          onChange={(e) => setReleaseForm({...releaseForm, releaseDate: e.target.value})}
+                          className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Leave empty to use today's date</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-white">Track List</h4>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#2a2a2a] text-white rounded-lg border border-gray-600 hover:border-gray-400 transition-all"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Track
+                        </button>
+                      </div>
+
+                      <div className="bg-[#2a2a2a] rounded-lg p-4 border border-gray-700">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="w-8 h-8 bg-[#1a1a1a] rounded-full flex items-center justify-center text-sm text-white">1</span>
+                          <div className="grid grid-cols-3 gap-3 flex-1">
+                            <input placeholder="Track 1 title" className="px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:border-white" />
+                            <input placeholder="Kanye West" value="Kanye West" readOnly className="px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 text-sm" />
+                            <input placeholder="Duration" className="px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:border-white" />
+                          </div>
+                        </div>
+                        <input 
+                          placeholder="MP3 URL (required for playback)" 
+                          className="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:border-white" 
+                        />
+                        <p className="text-xs text-gray-500 mt-2">Duration will be auto-detected from MP3 if not specified</p>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-2">
                       <button
                         type="submit"
-                        className="w-full py-4 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 tracking-wide"
+                        className="w-full py-4 bg-black text-white font-semibold rounded-lg border border-white hover:bg-gray-900 transition-all duration-200 flex items-center justify-center gap-2"
                       >
-                        Add Track
+                        <Plus className="w-5 h-5" />
+                        Add Release to Library
                       </button>
-                    </form>
-                  </div>
+                    </div>
+                  </form>
                 </div>
               )}
 
               {activeTab === 'users' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-semibold text-white tracking-wide">User Management</h3>
-                      <button
-                        onClick={fetchUsers}
-                        className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20"
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-white">User Management</h3>
+                    <button
+                      onClick={fetchUsers}
+                      className="px-4 py-2 bg-[#2a2a2a] text-white rounded-lg border border-gray-600 hover:border-gray-400 transition-all"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  <input
+                    placeholder="Search users by username..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all mb-6"
+                  />
+
+                  <div className="space-y-4">
+                    {filteredUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-lg border border-gray-700"
                       >
-                        Refresh
-                      </button>
-                    </div>
-                    <input
-                      placeholder="Search users by username..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300 mb-6"
-                    />
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {filteredUsers.map((user) => (
-                        <div
-                          key={user.id}
-                          className="flex items-center justify-between p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12 border border-white/20">
-                              <AvatarImage 
-                                src={user.profile_picture_url || undefined} 
-                                alt={user.username} 
-                              />
-                              <AvatarFallback className="bg-white/10 text-white border-0">
-                                {user.username.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-white font-medium text-lg">{user.username}</p>
-                              <p className="text-white/60">
-                                Joined: {new Date(user.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-10 w-10 border border-gray-600">
+                            <AvatarImage 
+                              src={user.profile_picture_url || undefined} 
+                              alt={user.username} 
+                            />
+                            <AvatarFallback className="bg-[#1a1a1a] text-white border-0">
+                              {user.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-white font-medium">{user.username}</p>
+                            <p className="text-gray-400 text-sm">
+                              Joined: {new Date(user.created_at).toLocaleDateString()}
+                            </p>
                           </div>
-                          <button
-                            onClick={() => banUser(user.id, user.username)}
-                            disabled={isLoading}
-                            className="flex items-center gap-2 px-6 py-3 bg-red-500/20 text-red-400 font-medium rounded-xl border border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50 hover:text-red-300 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Ban User
-                          </button>
                         </div>
-                      ))}
-                      {filteredUsers.length === 0 && (
-                        <div className="text-center py-12 text-white/40">
-                          <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                          <p className="text-lg">No users found</p>
-                        </div>
-                      )}
-                    </div>
+                        <button
+                          onClick={() => banUser(user.id, user.username)}
+                          disabled={isLoading}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-900/20 text-red-400 rounded-lg border border-red-800 hover:bg-red-900/30 hover:border-red-700 transition-all disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Ban User
+                        </button>
+                      </div>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <div className="text-center py-12 text-gray-400">
+                        <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                        <p>No users found</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {isAuthenticated && (
-            <div className="flex justify-end mt-8 pt-8 border-t border-white/10">
-              <button
-                onClick={logout}
-                className="px-8 py-3 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 tracking-wide"
-              >
-                Sign Out
-              </button>
             </div>
           )}
         </div>
