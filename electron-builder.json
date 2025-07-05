@@ -1,0 +1,48 @@
+
+{
+  "appId": "com.kanyePlayer.desktop",
+  "productName": "Kanye Player",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "public/electron.js",
+    "node_modules/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "public/favicon.ico",
+      "to": "favicon.ico"
+    }
+  ],
+  "mac": {
+    "category": "public.app-category.music",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ]
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+}
