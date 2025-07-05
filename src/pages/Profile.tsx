@@ -100,39 +100,53 @@ const Profile: React.FC = () => {
   const likedTracks = allTracks.filter(track => likedSongs.includes(track.id));
 
   const uploadImage = async (file: File, path: string): Promise<string> => {
+    console.log('Starting image upload for:', path);
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user?.id}/${path}.${fileExt}`;
+    const fileName = `${user?.id}/${path}_${Date.now()}.${fileExt}`;
     
     const { error: uploadError, data } = await supabase.storage
       .from('profiles')
       .upload(fileName, file, { upsert: true });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
+
+    console.log('Upload successful:', data);
 
     const { data: { publicUrl } } = supabase.storage
       .from('profiles')
       .getPublicUrl(fileName);
 
+    console.log('Public URL:', publicUrl);
     return publicUrl;
   };
 
   const handleImageUpload = async (file: File, type: 'profile' | 'background') => {
     if (!user || !isOwnProfile) return;
     
+    console.log('Handling image upload:', type, file);
     setLoading(true);
     try {
       const imageUrl = await uploadImage(file, type);
+      console.log('Image uploaded successfully:', imageUrl);
       
       const updateField = type === 'profile' ? 'profile_picture_url' : 'background_image_url';
       
+      console.log('Updating profile with:', updateField, imageUrl);
       const { error } = await supabase
         .from('profiles')
         .update({ [updateField]: imageUrl })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
 
-      // Update local state instead of reloading
+      console.log('Database updated successfully');
+      // Update local state
       setProfile(prev => prev ? { ...prev, [updateField]: imageUrl } : null);
 
       toast({
@@ -160,6 +174,8 @@ const Profile: React.FC = () => {
   const handleBioSave = async () => {
     if (!user || !isOwnProfile) return;
     
+    console.log('Saving bio:', bioText);
+    
     if (!validateBio(bioText)) {
       toast({
         title: "Error",
@@ -176,9 +192,13 @@ const Profile: React.FC = () => {
         .update({ bio: bioText })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Bio update error:', error);
+        throw error;
+      }
 
-      // Update local state instead of reloading
+      console.log('Bio updated successfully');
+      // Update local state
       setProfile(prev => prev ? { ...prev, bio: bioText } : null);
 
       toast({
@@ -230,7 +250,10 @@ const Profile: React.FC = () => {
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleImageUpload(file, 'background');
+            if (file) {
+              console.log('Background file selected:', file);
+              handleImageUpload(file, 'background');
+            }
           }}
         />
       </div>
@@ -264,7 +287,10 @@ const Profile: React.FC = () => {
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file && isOwnProfile) handleImageUpload(file, 'profile');
+                if (file && isOwnProfile) {
+                  console.log('Profile file selected:', file);
+                  handleImageUpload(file, 'profile');
+                }
               }}
             />
           </div>

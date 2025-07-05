@@ -62,6 +62,7 @@ export const AdminPanel = () => {
   }, [searchTerm, users]);
 
   const fetchUsers = async () => {
+    console.log('Fetching users...');
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -69,6 +70,7 @@ export const AdminPanel = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('Users fetched:', data);
       setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -81,27 +83,44 @@ export const AdminPanel = () => {
   };
 
   const banUser = async (userId: string, username: string) => {
+    console.log('Banning user:', userId, username);
     setIsLoading(true);
     try {
-      // Simply delete the user's profile from the profiles table
+      // Delete user's profile from the profiles table
+      console.log('Deleting profile...');
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile deletion error:', profileError);
+        throw profileError;
+      }
 
-      // Also clean up their liked songs and playlists
-      await supabase
+      // Clean up their liked songs
+      console.log('Cleaning up liked songs...');
+      const { error: likedError } = await supabase
         .from('liked_songs')
         .delete()
         .eq('user_id', userId);
 
-      await supabase
+      if (likedError) {
+        console.error('Liked songs cleanup error:', likedError);
+      }
+
+      // Clean up their playlists
+      console.log('Cleaning up playlists...');
+      const { error: playlistError } = await supabase
         .from('playlists')
         .delete()
         .eq('user_id', userId);
 
+      if (playlistError) {
+        console.error('Playlists cleanup error:', playlistError);
+      }
+
+      console.log('User banned successfully');
       toast({
         title: "Success",
         description: `User ${username} has been banned and their data removed`
