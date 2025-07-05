@@ -20,30 +20,36 @@ export const useDiscordRPC = () => {
 
     script.onload = () => {
       if (window.DiscordSDK) {
-        const rpc = new window.DiscordSDK.RPC.register('your-discord-app-id');
-        
-        const updateActivity = () => {
-          if (currentTrack && isPlaying) {
-            rpc.setActivity({
-              details: `Listening to ${currentTrack.title}`,
-              state: `by ${currentTrack.artist}`,
-              startTimestamp: Date.now(),
-              largeImageKey: 'music-icon',
-              largeImageText: 'Listening to music',
-              smallImageKey: 'play-icon',
-              smallImageText: 'Playing'
-            });
-          } else {
-            rpc.clearActivity();
-          }
-        };
+        try {
+          const rpc = new window.DiscordSDK.RPC.register('1390869946900152430');
+          
+          const updateActivity = () => {
+            if (currentTrack && isPlaying) {
+              rpc.setActivity({
+                details: `Listening to ${currentTrack.title}`,
+                state: `by ${currentTrack.artist}`,
+                startTimestamp: Date.now(),
+                largeImageKey: 'music-icon',
+                largeImageText: 'Listening to music',
+                smallImageKey: 'play-icon',
+                smallImageText: 'Playing'
+              });
+            } else {
+              rpc.clearActivity();
+            }
+          };
 
-        updateActivity();
+          updateActivity();
+        } catch (error) {
+          console.log('Discord RPC not available or user not connected to Discord');
+        }
       }
     };
 
     return () => {
-      document.head.removeChild(script);
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
     };
   }, [currentTrack, isPlaying]);
 };
