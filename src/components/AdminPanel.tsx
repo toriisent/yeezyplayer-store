@@ -18,7 +18,7 @@ interface Profile {
 
 export const AdminPanel = () => {
   const { isAuthenticated, isAdminPanelOpen, login, logout, closeAdminPanel } = useAdmin();
-  const { addRelease, releases } = useMusic();
+  const { addRelease, releases, updateTrackLyrics } = useMusic();
   const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('releases');
@@ -32,17 +32,20 @@ export const AdminPanel = () => {
     title: '',
     type: 'single' as 'single' | 'ep' | 'album',
     releaseDate: '',
-    coverUrl: ''
+    coverUrl: '',
+    artist: 'Ye, Kanye West'
   });
 
-  const [trackForm, setTrackForm] = useState({
-    releaseId: '',
+  const [trackForms, setTrackForms] = useState([{
     title: '',
-    artist: '',
+    artist: 'Ye, Kanye West',
     audioUrl: '',
-    coverUrl: '',
-    duration: 180,
-    trackOrder: 1
+    duration: 180
+  }]);
+
+  const [lyricsForm, setLyricsForm] = useState({
+    trackId: '',
+    lyrics: ''
   });
 
   useEffect(() => {
@@ -157,22 +160,61 @@ export const AdminPanel = () => {
 
   const handleReleaseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting release:', releaseForm);
+    console.log('Tracks:', trackForms);
+    
     try {
-      await addRelease({
+      const tracksWithUrls = trackForms.filter(track => track.title && track.audioUrl);
+      
+      if (tracksWithUrls.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please add at least one track with title and audio URL",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const releaseData = {
         id: '',
         title: releaseForm.title,
         type: releaseForm.type,
         coverUrl: releaseForm.coverUrl,
-        releaseDate: releaseForm.releaseDate,
-        tracks: [],
+        releaseDate: releaseForm.releaseDate || new Date().toISOString().split('T')[0],
+        tracks: tracksWithUrls.map((track, index) => ({
+          id: '',
+          title: track.title,
+          artist: track.artist,
+          audioUrl: track.audioUrl,
+          coverUrl: releaseForm.coverUrl,
+          duration: track.duration
+        })),
         isFeatured: false
+      };
+
+      await addRelease(releaseData);
+      
+      // Reset forms
+      setReleaseForm({
+        title: '',
+        type: 'single',
+        releaseDate: '',
+        coverUrl: '',
+        artist: 'Ye, Kanye West'
       });
-      setReleaseForm({ title: '', type: 'single', releaseDate: '', coverUrl: '' });
+      setTrackForms([{
+        title: '',
+        artist: 'Ye, Kanye West',
+        audioUrl: '',
+        duration: 180
+      }]);
+
       toast({
         title: "Success",
         description: "Release added successfully"
       });
     } catch (error) {
+      console.error('Error adding release:', error);
       toast({
         title: "Error",
         description: "Failed to add release",
@@ -181,40 +223,102 @@ export const AdminPanel = () => {
     }
   };
 
-  const handleTrackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddTrack = () => {
+    setTrackForms([...trackForms, {
+      title: '',
+      artist: 'Ye, Kanye West',
+      audioUrl: '',
+      duration: 180
+    }]);
+  };
+
+  const handleTrackChange = (index: number, field: string, value: string | number) => {
+    const updatedTracks = trackForms.map((track, i) => 
+      i === index ? { ...track, [field]: value } : track
+    );
+    setTrackForms(updatedTracks);
+  };
+
+  const handleRemoveTrack = (index: number) => {
+    if (trackForms.length > 1) {
+      setTrackForms(trackForms.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleLyricsSubmit = async (trackId: string) => {
+    try {
+      if (!lyricsForm.lyrics.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter lyrics",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Parse simple lyrics format (time:text)
+      const lines = lyricsForm.lyrics.split('\n').filter(line => line.trim());
+      const parsedLyrics = lines.map((line, index) => {
+        const match = line.match(/^(\d+(?:\.\d+)?):(.+)$/);
+        if (match) {
+          const time = parseFloat(match[1]);
+          const text = match[2].trim();
+          return {
+            time,
+            words: text.split(' ').map((word, wordIndex) => ({
+              word,
+              start: time + (wordIndex * 0.5),
+              end: time + ((wordIndex + 1) * 0.5)
+            }))
+          };
+        } else {
+          // Default timing if no time specified
+          return {
+            time: index * 4,
+            words: line.split(' ').map((word, wordIndex) => ({
+              word,
+              start: (index * 4) + (wordIndex * 0.5),
+              end: (index * 4) + ((wordIndex + 1) * 0.5)
+            }))
+          };
+        }
+      });
+
+      await updateTrackLyrics(trackId, parsedLyrics);
+      setLyricsForm({ trackId: '', lyrics: '' });
+      
+      toast({
+        title: "Success",
+        description: "Lyrics added successfully"
+      });
+    } catch (error) {
+      console.error('Error adding lyrics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add lyrics",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteRelease = async (releaseId: string) => {
     try {
       const { error } = await supabase
-        .from('tracks')
-        .insert({
-          release_id: trackForm.releaseId,
-          title: trackForm.title,
-          artist: trackForm.artist,
-          audio_url: trackForm.audioUrl,
-          cover_url: trackForm.coverUrl,
-          duration: trackForm.duration,
-          track_order: trackForm.trackOrder
-        });
+        .from('releases')
+        .delete()
+        .eq('id', releaseId);
 
       if (error) throw error;
 
-      setTrackForm({
-        releaseId: '',
-        title: '',
-        artist: '',
-        audioUrl: '',
-        coverUrl: '',
-        duration: 180,
-        trackOrder: 1
-      });
       toast({
         title: "Success",
-        description: "Track added successfully"
+        description: "Release deleted successfully"
       });
     } catch (error) {
+      console.error('Error deleting release:', error);
       toast({
         title: "Error",
-        description: "Failed to add track",
+        description: "Failed to delete release",
         variant: "destructive"
       });
     }
@@ -341,43 +445,49 @@ export const AdminPanel = () => {
                       </span>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="max-h-[400px] overflow-y-auto space-y-3">
                       {releases.map((release) => (
-                        <div key={release.id} className="bg-zinc-900 rounded-lg p-3 border border-zinc-800 hover:border-zinc-700 transition-all duration-300">
-                          <div className="flex items-start gap-3">
+                        <div key={release.id} className="bg-zinc-900 rounded-lg p-4 border border-zinc-800 hover:border-zinc-700 transition-all duration-300">
+                          <div className="flex items-start gap-4">
                             <img 
                               src={release.coverUrl} 
                               alt={release.title}
-                              className="w-10 h-10 rounded object-cover"
+                              className="w-16 h-16 rounded object-cover"
                             />
                             <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="text-sm font-medium text-white">{release.title}</h4>
-                                <div className="flex items-center gap-1">
-                                  <Star className="w-3 h-3 text-zinc-400 hover:text-yellow-400 cursor-pointer transition-colors" />
-                                  <Trash2 className="w-3 h-3 text-zinc-400 hover:text-red-400 cursor-pointer transition-colors" />
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-base font-medium text-white">{release.title}</h4>
+                                <div className="flex items-center gap-2">
+                                  <Star className="w-4 h-4 text-zinc-400 hover:text-yellow-400 cursor-pointer transition-colors" />
+                                  <Trash2 
+                                    className="w-4 h-4 text-zinc-400 hover:text-red-400 cursor-pointer transition-colors"
+                                    onClick={() => deleteRelease(release.id)}
+                                  />
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-zinc-400 mb-2">
-                                <span className="bg-black px-1.5 py-0.5 rounded capitalize">{release.type}</span>
+                              <div className="flex items-center gap-3 text-sm text-zinc-400 mb-3">
+                                <span className="bg-black px-2 py-1 rounded capitalize">{release.type}</span>
                                 <span>{release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}</span>
                                 <span>{release.releaseDate}</span>
                               </div>
                               
                               {release.tracks.length > 0 && (
                                 <div>
-                                  <h5 className="text-xs font-medium text-zinc-300 mb-1">Tracks</h5>
+                                  <h5 className="text-sm font-medium text-zinc-300 mb-2">Tracks</h5>
                                   {release.tracks.map((track, index) => (
-                                    <div key={track.id} className="flex items-center justify-between py-1 text-xs">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-zinc-500 w-3">{index + 1}</span>
+                                    <div key={track.id} className="flex items-center justify-between py-2 text-sm border-b border-zinc-800 last:border-0">
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-zinc-500 w-4">{index + 1}</span>
                                         <div>
                                           <div className="text-white font-medium">{track.title}</div>
-                                          <div className="text-zinc-400">{track.artist}</div>
+                                          <div className="text-zinc-400 text-xs">{track.artist}</div>
                                         </div>
                                       </div>
-                                      <button className="flex items-center gap-1 px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
-                                        <Mic className="w-2 h-2" />
+                                      <button 
+                                        onClick={() => setLyricsForm({ ...lyricsForm, trackId: track.id })}
+                                        className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                                      >
+                                        <Mic className="w-3 h-3" />
                                         Add Lyrics
                                       </button>
                                     </div>
@@ -389,115 +499,195 @@ export const AdminPanel = () => {
                         </div>
                       ))}
                     </div>
+
+                    {/* Lyrics Modal */}
+                    {lyricsForm.trackId && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                        <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-2xl border border-zinc-700">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-medium text-white">Add Lyrics</h3>
+                            <button
+                              onClick={() => setLyricsForm({ trackId: '', lyrics: '' })}
+                              className="text-zinc-400 hover:text-white"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-white mb-2">
+                                Lyrics (Format: time:text or just text)
+                              </label>
+                              <textarea
+                                value={lyricsForm.lyrics}
+                                onChange={(e) => setLyricsForm({ ...lyricsForm, lyrics: e.target.value })}
+                                placeholder="0:First line of lyrics&#10;4:Second line of lyrics&#10;8:Third line of lyrics"
+                                className="w-full h-40 px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white resize-none"
+                              />
+                              <p className="text-xs text-zinc-500 mt-1">
+                                Use format "seconds:lyrics" for timed lyrics, or just enter plain text
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleLyricsSubmit(lyricsForm.trackId)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                              >
+                                Add Lyrics
+                              </button>
+                              <button
+                                onClick={() => setLyricsForm({ trackId: '', lyrics: '' })}
+                                className="px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600 transition-colors text-sm"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {activeTab === 'add-release' && (
-                  <div className="animate-slide-in-right max-w-3xl mx-auto">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-medium text-white mb-1">Add New Release</h3>
-                      <p className="text-xs text-zinc-400">Upload a new album, EP, or single</p>
+                  <div className="animate-slide-in-right max-w-4xl mx-auto">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-medium text-white mb-2">Add New Release</h3>
+                      <p className="text-sm text-zinc-400">Upload a new album, EP, or single</p>
                     </div>
 
-                    <form onSubmit={handleReleaseSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-white mb-1">Release Title</label>
-                          <input
-                            placeholder="Enter release title..."
-                            value={releaseForm.title}
-                            onChange={(e) => setReleaseForm({...releaseForm, title: e.target.value})}
-                            className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-xs font-medium text-white mb-1">Artist Name</label>
-                          <input
-                            placeholder="Kanye West"
-                            value="Kanye West"
-                            className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300"
-                            readOnly
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-white mb-1">Release Type</label>
-                          <select
-                            value={releaseForm.type}
-                            onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value as 'single' | 'ep' | 'album'})}
-                            className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
-                            required
-                          >
-                            <option value="single">Single</option>
-                            <option value="ep">EP</option>
-                            <option value="album">Album</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-white mb-1">Cover Image URL</label>
-                          <input
-                            placeholder="https://example.com/cover.jpg"
-                            value={releaseForm.coverUrl}
-                            onChange={(e) => setReleaseForm({...releaseForm, coverUrl: e.target.value})}
-                            className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-white mb-1">Release Date (optional)</label>
-                          <input
-                            type="text"
-                            placeholder="dd/mm/yyyy"
-                            value={releaseForm.releaseDate}
-                            onChange={(e) => setReleaseForm({...releaseForm, releaseDate: e.target.value})}
-                            className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
-                          />
-                          <p className="text-xs text-zinc-500 mt-1">Leave empty to use today's date</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-white">Track List</h4>
-                          <button
-                            type="button"
-                            className="flex items-center gap-1 px-2 py-1 bg-zinc-900 text-white rounded border border-zinc-700 hover:border-zinc-500 transition-all text-xs"
-                          >
-                            <Plus className="w-3 h-3" />
-                            Add Track
-                          </button>
-                        </div>
-
-                        <div className="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="w-5 h-5 bg-black rounded-full flex items-center justify-center text-xs text-white">1</span>
-                            <div className="grid grid-cols-3 gap-2 flex-1">
-                              <input placeholder="Track 1 title" className="px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" />
-                              <input placeholder="Kanye West" value="Kanye West" readOnly className="px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-xs" />
-                              <input placeholder="Duration" className="px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" />
-                            </div>
+                    <form onSubmit={handleReleaseSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">Release Title</label>
+                            <input
+                              placeholder="Enter release title..."
+                              value={releaseForm.title}
+                              onChange={(e) => setReleaseForm({...releaseForm, title: e.target.value})}
+                              className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
+                              required
+                            />
                           </div>
-                          <input 
-                            placeholder="MP3 URL (required for playback)" 
-                            className="w-full px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" 
-                          />
-                          <p className="text-xs text-zinc-500 mt-1">Duration will be auto-detected from MP3 if not specified</p>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">Artist Name</label>
+                            <input
+                              placeholder="Ye, Kanye West"
+                              value={releaseForm.artist}
+                              onChange={(e) => setReleaseForm({...releaseForm, artist: e.target.value})}
+                              className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">Release Type</label>
+                            <select
+                              value={releaseForm.type}
+                              onChange={(e) => setReleaseForm({...releaseForm, type: e.target.value as 'single' | 'ep' | 'album'})}
+                              className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
+                              required
+                            >
+                              <option value="single">Single</option>
+                              <option value="ep">EP</option>
+                              <option value="album">Album</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">Cover Image URL</label>
+                            <input
+                              placeholder="https://example.com/cover.jpg"
+                              value={releaseForm.coverUrl}
+                              onChange={(e) => setReleaseForm({...releaseForm, coverUrl: e.target.value})}
+                              className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">Release Date (optional)</label>
+                            <input
+                              type="date"
+                              value={releaseForm.releaseDate}
+                              onChange={(e) => setReleaseForm({...releaseForm, releaseDate: e.target.value})}
+                              className="w-full px-3 py-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-white">Track List</h4>
+                            <button
+                              type="button"
+                              onClick={handleAddTrack}
+                              className="flex items-center gap-1 px-3 py-1 bg-zinc-900 text-white rounded border border-zinc-700 hover:border-zinc-500 transition-all text-sm"
+                            >
+                              <Plus className="w-3 h-3" />
+                              Add Track
+                            </button>
+                          </div>
+
+                          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                            {trackForms.map((track, index) => (
+                              <div key={index} className="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className="w-6 h-6 bg-black rounded-full flex items-center justify-center text-xs text-white">{index + 1}</span>
+                                  {trackForms.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveTrack(index)}
+                                      className="ml-auto text-red-400 hover:text-red-300"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <input 
+                                    placeholder="Track title" 
+                                    value={track.title}
+                                    onChange={(e) => handleTrackChange(index, 'title', e.target.value)}
+                                    className="w-full px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" 
+                                  />
+                                  
+                                  <input 
+                                    placeholder="Artist name" 
+                                    value={track.artist}
+                                    onChange={(e) => handleTrackChange(index, 'artist', e.target.value)}
+                                    className="w-full px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" 
+                                  />
+                                  
+                                  <input 
+                                    placeholder="Duration (seconds)" 
+                                    type="number"
+                                    value={track.duration}
+                                    onChange={(e) => handleTrackChange(index, 'duration', parseInt(e.target.value) || 180)}
+                                    className="w-full px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" 
+                                  />
+                                  
+                                  <input 
+                                    placeholder="MP3 URL (required for playback)" 
+                                    value={track.audioUrl}
+                                    onChange={(e) => handleTrackChange(index, 'audioUrl', e.target.value)}
+                                    className="w-full px-2 py-1 bg-black border border-zinc-700 rounded text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white transition-all duration-300 hover:border-zinc-500" 
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="lg:col-span-2">
-                        <button
-                          type="submit"
-                          className="w-full py-2 bg-black text-white font-medium rounded border border-zinc-700 hover:border-white transition-all duration-300 flex items-center justify-center gap-2 text-sm"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Release to Library
-                        </button>
-                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-3 bg-black text-white font-medium rounded border border-zinc-700 hover:border-white transition-all duration-300 flex items-center justify-center gap-2 text-base"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Add Release to Library
+                      </button>
                     </form>
                   </div>
                 )}
